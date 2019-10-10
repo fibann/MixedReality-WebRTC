@@ -1393,27 +1393,43 @@ namespace TestAppUwp
             {
                 LogMessage("Opening local A/V stream...");
 
+                var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+                bool baraboo = arch == "x86";
+
+
                 var captureDevice = SelectedVideoCaptureDevice;
                 var captureDeviceInfo = new VideoCaptureDevice()
                 {
-                    id = captureDevice?.Id,
-                    name = captureDevice?.DisplayName
+                    id = baraboo ? @"\\?\DISPLAY#INT22B8#4&27b432bd&0&UID139960#{e5323777-f976-4f5b-9b55-b94699c46e44}\{CDD6871A-56CA-4386-BAE7-D24B564378A9}" :
+                    @"\\?\DISPLAY#QCOM_AVStream_850#3&809a381&0&UID32768#{e5323777-f976-4f5b-9b55-b94699c46e44}\{5584F823-3830-4CFD-947F-78DE17A8B14C}",
+                    name = baraboo ? "MN34150" : "QC Back Camera"
                 };
+                string videoProfileId = baraboo ? "{A0E517E8-8F8C-4F6F-9A57-46FC2F647EC0},1" : "{C5444A88-E1BF-4597-B2DD-9E1EAD864BB8},100";
+                uint width = 1280;
+                uint height = 720;
+                double framerate = 30.0;
+                var videoProfileKind = baraboo ? PeerConnection.VideoProfileKind.VideoRecording : PeerConnection.VideoProfileKind.VideoConferencing;
+
                 var videoProfile = SelectedVideoProfile;
-                string videoProfileId = videoProfile?.Id;
-                uint width;
-                uint height;
-                double framerate;
-                if (videoProfile != null)
+                if (arch == "AMD64" || (captureDevice != null && videoProfile != null))
                 {
-                    var recordMediaDesc = SelectedRecordMediaDesc ?? videoProfile.SupportedRecordMediaDescription[0];
-                    width = recordMediaDesc.Width;
-                    height = recordMediaDesc.Height;
-                    framerate = recordMediaDesc.FrameRate;
-                }
-                else
-                {
-                    var captureFormat = SelectedVideoCaptureFormat;
+                    videoProfileKind = SelectedVideoProfileKind;
+                    captureDeviceInfo = new VideoCaptureDevice()
+                    {
+                        id = captureDevice?.Id,
+                        name = captureDevice?.DisplayName
+                    };
+                    videoProfileId = videoProfile?.Id;
+                    if (videoProfile != null)
+                    {
+                        var recordMediaDesc = SelectedRecordMediaDesc ?? videoProfile.SupportedRecordMediaDescription[0];
+                        width = recordMediaDesc.Width;
+                        height = recordMediaDesc.Height;
+                        framerate = recordMediaDesc.FrameRate;
+                    }
+                    else
+                    {
+                        var captureFormat = SelectedVideoCaptureFormat;
                     if (captureFormat.HasValue)
                     {
                         width = captureFormat.Value.width;
@@ -1425,8 +1441,10 @@ namespace TestAppUwp
                         LogMessage("Cannot start video capture; no capture format selected.");
                         return;
                     }
-                }
+                    }
 
+
+                }
                 localVideoPlayer.Source = null;
                 localVideoSource?.NotifyError(MediaStreamSourceErrorStatus.Other);
                 localMediaSource?.Dispose();
@@ -1461,7 +1479,7 @@ namespace TestAppUwp
                         trackName = "local_video",
                         videoDevice = captureDeviceInfo,
                         videoProfileId = videoProfileId,
-                        videoProfileKind = SelectedVideoProfileKind,
+                        videoProfileKind = videoProfileKind,
                         width = width,
                         height = height,
                         framerate = framerate,
@@ -1584,6 +1602,7 @@ namespace TestAppUwp
             dssSignaler.LocalPeerId = localPeerUidTextBox.Text;
             dssSignaler.RemotePeerId = remotePeerUidTextBox.Text;
             dssSignaler.PollTimeMs = pollTimeMs;
+
             if (dssSignaler.StartPollingAsync())
             {
                 pollDssButton.Content = "Stop polling";
