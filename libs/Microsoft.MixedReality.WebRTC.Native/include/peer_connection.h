@@ -212,6 +212,15 @@ class PeerConnection : public webrtc::PeerConnectionObserver,
   /// The underlying RTP sender/transceiver are kept alive but inactive.
   webrtc::RTCError RemoveLocalVideoTrack(LocalVideoTrack& video_track) noexcept;
 
+  enum class FrameHeightRoundMode { NONE = 0, CROP = 1, PAD = 2 };
+
+  /// Use this function to select whether resolutions where height is not multiple of 16
+  /// should be cropped, padded or left unchanged.
+  /// Default is FrameHeightRoundMode::NONE, except on Hololens 1 where it is
+  /// FrameHeightRoundMode::CROP to avoid severe artifacts produced by
+  /// the H.264 hardware encoder.  
+  static void SetFrameHeightRoundMode(FrameHeightRoundMode value);
+
   //
   // Audio
   //
