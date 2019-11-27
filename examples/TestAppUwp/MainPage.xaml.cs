@@ -242,6 +242,8 @@ namespace TestAppUwp
 
             //Window.Current.Closed += Shutdown; // doesn't work
 
+            PollDssButtonClicked(this, null);
+
             this.Loaded += OnLoaded;
             Application.Current.Suspending += App_Suspending;
             Application.Current.Resuming += App_Resuming;
@@ -260,8 +262,25 @@ namespace TestAppUwp
             RestoreLocalAndRemotePeerIDs();
         }
 
+        private static bool IsFirstInstance()
+        {
+            var firstInstance = AppInstance.FindOrRegisterInstanceForKey("{44CD414E-B604-482E-8CFD-A9E09076CABD}");
+            return firstInstance.IsCurrentInstance;
+        }
+
         private void RestoreLocalAndRemotePeerIDs()
         {
+            var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+            localPeerUidTextBox.Text = arch;
+            if (arch == "AMD64")
+            {
+                remotePeerUidTextBox.Text = "x86";
+            }
+            else
+            {
+                remotePeerUidTextBox.Text = "AMD64";
+            }
+
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
             if (localSettings.Values.TryGetValue("LocalPeerID", out object localObj))
             {
@@ -280,6 +299,13 @@ namespace TestAppUwp
                 {
                     remotePeerUidTextBox.Text = str;
                 }
+            }
+
+            if (!IsFirstInstance())
+            {
+                var tmp = localPeerUidTextBox.Text;
+                localPeerUidTextBox.Text = remotePeerUidTextBox.Text;
+                remotePeerUidTextBox.Text = tmp;
             }
         }
 
@@ -1135,40 +1161,60 @@ namespace TestAppUwp
             {
                 LogMessage("Opening local A/V stream...");
 
+
+
+                var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+                bool baraboo = arch == "x86";
+
+
                 var captureDevice = SelectedVideoCaptureDevice;
                 var captureDeviceInfo = new VideoCaptureDevice()
                 {
-                    id = captureDevice?.Id,
-                    name = captureDevice?.DisplayName
+                    id = baraboo ? @"\\?\DISPLAY#INT22B8#4&27b432bd&0&UID139960#{e5323777-f976-4f5b-9b55-b94699c46e44}\{CDD6871A-56CA-4386-BAE7-D24B564378A9}" :
+                    @"\\?\DISPLAY#QCOM_AVStream_850#3&809a381&0&UID32768#{e5323777-f976-4f5b-9b55-b94699c46e44}\{5584F823-3830-4CFD-947F-78DE17A8B14C}",
+                    name = baraboo ? "MN34150" : "QC Back Camera"
                 };
+                string videoProfileId = baraboo ? "{A0E517E8-8F8C-4F6F-9A57-46FC2F647EC0},0" : "{C5444A88-E1BF-4597-B2DD-9E1EAD864BB8},100";
+                uint width = 896;
+                uint height = 504;
+                //uint width = 960;
+                //uint height = 540;
+                double framerate = 24.0;
+                var videoProfileKind = baraboo ? PeerConnection.VideoProfileKind.VideoRecording : PeerConnection.VideoProfileKind.VideoConferencing;
+
                 var videoProfile = SelectedVideoProfile;
-                string videoProfileId = videoProfile?.Id;
-                uint width;
-                uint height;
-                double framerate;
-                if (videoProfile != null)
+                if (arch == "AMD64" || (captureDevice != null && videoProfile != null))
                 {
-                    var recordMediaDesc = SelectedRecordMediaDesc ?? videoProfile.SupportedRecordMediaDescription[0];
-                    width = recordMediaDesc.Width;
-                    height = recordMediaDesc.Height;
-                    framerate = recordMediaDesc.FrameRate;
-                }
-                else
-                {
-                    var captureFormat = SelectedVideoCaptureFormat;
-                    if (captureFormat.HasValue)
+                    videoProfileKind = SelectedVideoProfileKind;
+                    captureDeviceInfo = new VideoCaptureDevice()
                     {
-                        width = captureFormat.Value.width;
-                        height = captureFormat.Value.height;
-                        framerate = captureFormat.Value.framerate;
+                        id = captureDevice?.Id,
+                        name = captureDevice?.DisplayName
+                    };
+                    videoProfileId = videoProfile?.Id;
+                    if (videoProfile != null)
+                    {
+                        var recordMediaDesc = SelectedRecordMediaDesc ?? videoProfile.SupportedRecordMediaDescription[0];
+                        width = recordMediaDesc.Width;
+                        height = recordMediaDesc.Height;
+                        framerate = recordMediaDesc.FrameRate;
                     }
                     else
                     {
-                        LogMessage("Cannot start video capture; no capture format selected.");
-                        return;
+                        var captureFormat = SelectedVideoCaptureFormat;
+                        if (captureFormat.HasValue)
+                        {
+                            width = captureFormat.Value.width;
+                            height = captureFormat.Value.height;
+                            framerate = captureFormat.Value.framerate;
+                        }
+                        else
+                        {
+                            LogMessage("Cannot start video capture; no capture format selected.");
+                            return;
+                        }
                     }
                 }
-
                 localVideoPlayer.Source = null;
                 localVideoSource?.NotifyError(MediaStreamSourceErrorStatus.Other);
                 localMediaSource?.Dispose();
@@ -1200,7 +1246,7 @@ namespace TestAppUwp
                         trackName = "local_video",
                         videoDevice = captureDeviceInfo,
                         videoProfileId = videoProfileId,
-                        videoProfileKind = SelectedVideoProfileKind,
+                        videoProfileKind = videoProfileKind,
                         width = width,
                         height = height,
                         framerate = framerate,
@@ -1298,7 +1344,7 @@ namespace TestAppUwp
                 return;
             }
 
-            dssSignaler.HttpServerAddress = dssServer.Text;
+            dssSignaler.HttpServerAddress = "http://10.164.25.115:3000/";
             dssSignaler.LocalPeerId = localPeerUidTextBox.Text;
             dssSignaler.RemotePeerId = remotePeerUidTextBox.Text;
             dssSignaler.PollTimeMs = pollTimeMs;
