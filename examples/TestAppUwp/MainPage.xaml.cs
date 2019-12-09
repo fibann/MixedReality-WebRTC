@@ -1040,7 +1040,7 @@ namespace TestAppUwp
 
         /// <summary>
         /// Callback on audio frame received from the remote peer, for local output
-        /// (or any other use). 
+        /// (or any other use).
         /// </summary>
         /// <param name="frame">The newly received audio frame.</param>
         private void Peer_RemoteAudioFrameReady(AudioFrame frame)
@@ -1189,7 +1189,7 @@ namespace TestAppUwp
                 {
                     // The default start bitrate is quite low (300 kbps); use a higher value to get
                     // better quality on local network.
-                    _peerConnection.SetBitrate(startBitrateBps: (uint)(width * height * framerate / 20));
+                    _peerConnection.SetBitrate(startBitrateBps: 1000000, maxBitrateBps: 1000000);
 
                     // Add the local audio track captured from the local microphone
                     await _peerConnection.AddLocalAudioTrackAsync();
