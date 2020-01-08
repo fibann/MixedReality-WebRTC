@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>e2e8a15f-9113-4e71-9f83-cfa09eda2b0f</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>fb20131d-c1f9-4431-98a9-fde83b38c03d</UniqueIdentifier>
+      <Extensions>bmp;fbx;gif;jpg;jpeg;tga;tiff;tif;png</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="H264Encoder\H264Encoder.cc" />
+    <ClCompile Include="H264Encoder\H264MediaSink.cc" />
+    <ClCompile Include="H264Encoder\H264StreamSink.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare_common.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare_gcc.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare_mmi.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare_msa.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare_neon.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare_neon64.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare_win.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\convert.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\convert_argb.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\convert_from.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\convert_from_argb.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\convert_jpeg.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\convert_to_argb.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\convert_to_i420.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\cpu_id.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\mjpeg_decoder.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\mjpeg_validate.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\planar_functions.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_any.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_argb.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_common.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_gcc.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_mmi.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_msa.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_neon.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_neon64.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\rotate_win.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\row_any.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\row_common.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\row_gcc.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\row_mmi.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\row_msa.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\row_neon.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\row_neon64.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\row_win.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_any.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_argb.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_common.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_gcc.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_mmi.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_msa.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_neon.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_neon64.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\scale_win.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\video_common.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\psnr.cc" />
+    <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\ssim.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="H264Encoder\H264Encoder.h" />
+    <ClInclude Include="H264Encoder\H264MediaSink.h" />
+    <ClInclude Include="H264Encoder\H264StreamSink.h" />
+    <ClInclude Include="H264Encoder\IH264EncodingCallback.h" />
+    <ClInclude Include="Utils\Async.h" />
+    <ClInclude Include="Utils\CritSec.h" />
+    <ClInclude Include="Utils\OpQueue.h" />
+    <ClInclude Include="Utils\SampleAttributeQueue.h" />
+    <ClInclude Include="Utils\Utils.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\basic_types.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\compare.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\compare_row.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\convert.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\convert_argb.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\convert_from.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\convert_from_argb.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\cpu_id.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\macros_msa.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\mjpeg_decoder.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\planar_functions.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\rotate.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\rotate_argb.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\rotate_row.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\row.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\scale.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\scale_argb.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\scale_row.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\version.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\video_common.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\psnr.h" />
+    <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\ssim.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\LockScreenLogo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\SplashScreen.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square150x150Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\StoreLogo.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Wide310x150Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="MainPage.xaml" />
+  </ItemGroup>
+</Project>
