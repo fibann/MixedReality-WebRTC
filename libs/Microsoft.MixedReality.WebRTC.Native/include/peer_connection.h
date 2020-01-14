@@ -11,6 +11,10 @@
 #include "tracked_object.h"
 #include "video_frame_observer.h"
 
+namespace webrtc {
+    class RTCStatsReport;
+}
+
 namespace Microsoft::MixedReality::WebRTC {
 
 class PeerConnection;
@@ -22,6 +26,43 @@ struct BitrateSettings {
   std::optional<int> start_bitrate_bps;
   std::optional<int> min_bitrate_bps;
   std::optional<int> max_bitrate_bps;
+};
+
+
+
+// TODO move to different header
+template <class T>
+constexpr const char* GetStatsName() {
+  static_assert("Not a stats type");
+}
+
+template <>
+constexpr const char* GetStatsName<mrsDataChannelStats>() {
+  return "DataChannelStats";
+}
+
+class StatsReport : public RefCountedBase {
+ public:
+  StatsReport(const webrtc::RTCStatsReport&);
+  ~StatsReport();
+
+  template <class T>
+  std::vector<T> GetStatsObjects() const {
+    std::vector<T> res;
+    mrsStatsReportGetObjects(&report_, GetStatsName<T>(),
+                             &GetObjectsCallback<T>, &res);
+    return res;
+  }
+
+  private:
+  template <class T>
+   static void GetObjectsCallback(void* user_data, const void* stats_object) {
+     auto& res = *static_cast<std::vector<T>*>(user_data);
+     res.push_back(*static_cast<const T*>(stats_object));
+  }
+
+ private:
+  const webrtc::RTCStatsReport& report_;
 };
 
 /// The PeerConnection class is the entry point to most of WebRTC.

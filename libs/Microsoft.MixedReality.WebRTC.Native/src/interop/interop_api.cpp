@@ -17,6 +17,10 @@
 #include "peer_connection.h"
 #include "sdp_utils.h"
 
+namespace Microsoft::MixedReality::WebRTC {
+void PeerConnection_GetStats(webrtc::RTCStatsCollectorCallback* callback);
+}  // namespace Microsoft::MixedReality::WebRTC
+
 using namespace Microsoft::MixedReality::WebRTC;
 
 struct mrsEnumerator {
@@ -1167,7 +1171,7 @@ void GetCommonValues(T& lhs, const webrtc::RTCInboundRTPStreamStats& rhs) {
   lhs.BytesReceived = *rhs.bytes_received;
 }
 
-}
+}  // namespace
 
 mrsResult MRS_CALL
 mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
