@@ -792,7 +792,7 @@ using mrsStatsReportHandle = const void*;
 
 using PeerConnectionSimpleStatsCallback = void (MRS_CALL*)(void* user_data, mrsStatsReportHandle stats_report);
 using mrsStatsReportGetObjectCallback =
-    void(MRS_CALL*)(void* user_data, void* stats_object);
+    void(MRS_CALL*)(void* user_data, const void* stats_object);
 
 MRS_API mrsResult MRS_CALL mrsPeerConnectionGetSimpleStats(
     PeerConnectionHandle peer_handle, PeerConnectionSimpleStatsCallback callback,

@@ -1243,8 +1243,9 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
             auto& dest_stats = FindOrInsert(pending_stats, track_stats.id());
             dest_stats.TimestampUs = track_stats.timestamp_us();
             dest_stats.TrackIdentifier = track_stats.track_identifier->c_str();
-            dest_stats.AudioLevel =
-                track_stats.audio_level.is_defined() ? *track_stats.audio_level : 0;
+            dest_stats.AudioLevel = track_stats.audio_level.is_defined()
+                                        ? *track_stats.audio_level
+                                        : 0;
             dest_stats.TotalAudioEnergy = *track_stats.total_audio_energy;
             dest_stats.TotalSamplesReceived =
                 *track_stats.total_samples_received;
