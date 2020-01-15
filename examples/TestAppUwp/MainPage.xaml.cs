@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.MixedReality.WebRTC;
@@ -668,6 +669,37 @@ namespace TestAppUwp
             // so that the former can render in the UI the video frames produced in the background by the later.
             localVideo.SetMediaPlayer(localVideoPlayer);
             remoteVideo.SetMediaPlayer(remoteVideoPlayer);
+
+            _peerConnection.GetSimpleStatsAsync().ContinueWith((Task<PeerConnection.StatsReport> task) =>
+            {
+                var b = new StringBuilder("INIT:\n");
+                foreach (var st in task.Result.GetStats<PeerConnection.DataChannelStats>())
+                {
+                    Dump(b, st);
+                }
+                foreach (var st in task.Result.GetStats<PeerConnection.AudioSenderStats>())
+                {
+                    Dump(b, st);
+                }
+                foreach (var st in task.Result.GetStats<PeerConnection.AudioReceiverStats>())
+                {
+                    Dump(b, st);
+                }
+                foreach (var st in task.Result.GetStats<PeerConnection.VideoSenderStats>())
+                {
+                    Dump(b, st);
+                }
+                foreach (var st in task.Result.GetStats<PeerConnection.VideoReceiverStats>())
+                {
+                    Dump(b, st);
+                }
+                foreach (var st in task.Result.GetStats<PeerConnection.TransportStats>())
+                {
+                    Dump(b, st);
+                }
+                Debug.WriteLine(b.ToString());
+                task.Result.Dispose();
+            }, TaskScheduler.Default);
         }
 
         private void PreferredAudioCodecChecked(object sender, RoutedEventArgs args)
@@ -1228,6 +1260,41 @@ namespace TestAppUwp
             }
         }
 
+        private static Dictionary<string, string> GetProperties(object obj)
+        {
+            var props = new Dictionary<string, string>();
+            if (obj == null)
+                return props;
+
+            var type = obj.GetType();
+            foreach (var prop in type.GetFields())
+            {
+                var val = prop.GetValue(obj);
+                var valStr = val == null ? "" : val.ToString();
+                props.Add(prop.Name, valStr);
+            }
+
+            return props;
+        }
+
+        private static void Dump(StringBuilder b, object obj)
+        {
+            var props = GetProperties(obj);
+
+            if (props.Count > 0)
+            {
+                b.Append(obj.GetType().Name);
+                b.AppendLine("-------------------------");
+            }
+
+            foreach (var prop in props)
+            {
+                b.Append(prop.Key);
+                b.Append(": ");
+                b.AppendLine(prop.Value);
+            }
+        }
+        DateTime last = DateTime.Now;
         /// <summary>
         /// Callback on video frame received from the local video capture device,
         /// for local rendering before (or in parallel of) being sent to the remote peer.
@@ -1235,6 +1302,41 @@ namespace TestAppUwp
         /// <param name="frame">The newly captured video frame.</param>
         private void LocalVideoTrack_I420AFrameReady(I420AVideoFrame frame)
         {
+            var now = DateTime.Now;
+            if ((now - last).TotalSeconds > 3)
+            {
+                last = now;
+                _peerConnection.GetSimpleStatsAsync().ContinueWith((Task<PeerConnection.StatsReport> task) =>
+                {
+                    var b = new StringBuilder("SENDER:\n");
+                    foreach (var st in task.Result.GetStats<PeerConnection.DataChannelStats>())
+                    {
+                        Dump(b, st);
+                    }
+                    foreach (var st in task.Result.GetStats<PeerConnection.AudioSenderStats>())
+                    {
+                        Dump(b, st);
+                    }
+                    foreach (var st in task.Result.GetStats<PeerConnection.AudioReceiverStats>())
+                    {
+                        Dump(b, st);
+                    }
+                    foreach (var st in task.Result.GetStats<PeerConnection.VideoSenderStats>())
+                    {
+                        Dump(b, st);
+                    }
+                    foreach (var st in task.Result.GetStats<PeerConnection.VideoReceiverStats>())
+                    {
+                        Dump(b, st);
+                    }
+                    foreach (var st in task.Result.GetStats<PeerConnection.TransportStats>())
+                    {
+                        Dump(b, st);
+                    }
+                    Debug.WriteLine(b.ToString());
+                    task.Result.Dispose();
+                });
+            }
             localVideoBridge.HandleIncomingVideoFrame(frame);
         }
 
@@ -1245,6 +1347,42 @@ namespace TestAppUwp
         /// <param name="frame">The newly received video frame.</param>
         private void Peer_RemoteI420AFrameReady(I420AVideoFrame frame)
         {
+            var now = DateTime.Now;
+            if ((now - last).TotalSeconds > 3)
+            {
+                last = now;
+                RunOnMainThread(() =>
+                    _peerConnection.GetSimpleStatsAsync().ContinueWith((Task<PeerConnection.StatsReport> task) =>
+                    {
+                        var b = new StringBuilder("RECEIVER:\n");
+                        foreach (var st in task.Result.GetStats<PeerConnection.DataChannelStats>())
+                        {
+                            Dump(b, st);
+                        }
+                        foreach (var st in task.Result.GetStats<PeerConnection.AudioSenderStats>())
+                        {
+                            Dump(b, st);
+                        }
+                        foreach (var st in task.Result.GetStats<PeerConnection.AudioReceiverStats>())
+                        {
+                            Dump(b, st);
+                        }
+                        foreach (var st in task.Result.GetStats<PeerConnection.VideoSenderStats>())
+                        {
+                            Dump(b, st);
+                        }
+                        foreach (var st in task.Result.GetStats<PeerConnection.VideoReceiverStats>())
+                        {
+                            Dump(b, st);
+                        }
+                        foreach (var st in task.Result.GetStats<PeerConnection.TransportStats>())
+                        {
+                            Dump(b, st);
+                        }
+                        Debug.WriteLine(b.ToString());
+                        task.Result.Dispose();
+                    }));
+            }
             // Lazily start the remote video media player when receiving
             // the first video frame from the remote peer. Currently there
             // is no exposed API to tell once connected that the remote peer
