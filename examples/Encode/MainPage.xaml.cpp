@@ -4,12 +4,15 @@
 //
 
 #include "MainPage.xaml.h"
+
 #include <assert.h>
+
+#include <algorithm>
 #include <codecvt>
 #include <fstream>
+
 #include "H264Encoder/H264Encoder.h"
 #include "pch.h"
-#include <algorithm>
 
 using namespace Encode;
 
@@ -33,6 +36,12 @@ void ReadFile(const char* filename, int frame_size) {
   auto destBuffer = new char[frame_size];
 
   int i = 0;
+  LONGLONG last_frame_timestamp = 0;
+  int last_second = 0;
+  int frames_at_last_second = 0;
+  int bits_at_last_second = 0;
+  int bits = 0;
+  char log[1024];
   while (!compressed_file.eof()) {
     int64_t timestampHns, durationHns;
     int32_t totalSize;
@@ -43,11 +52,25 @@ void ReadFile(const char* filename, int frame_size) {
     assert(totalSize <= frame_size);
     compressed_file.read((char*)destBuffer, totalSize);
 
-    char log[1024];
-    sprintf(log, "%d TS %lld D %lld S %d\n", i++, timestampHns / 10'000,
-            durationHns / 10'000, totalSize);
+    if (last_second < timestampHns / 10'000'000) {
+      last_second = timestampHns / 10'000'000;
+      sprintf(log, "%d fps %f kbps\n", i - frames_at_last_second, (bits - bits_at_last_second) / 1000.0f);
+      frames_at_last_second = i;
+      bits_at_last_second = bits;
+      OutputDebugStringA(log);
+    }
+
+    auto actualDurationHns = timestampHns - last_frame_timestamp;
+    last_frame_timestamp = timestampHns;
+    sprintf(log, "%d TS %lld D %lld AD %lld S %d\n", i++, timestampHns / 10'000,
+            durationHns / 10'000, actualDurationHns / 10'000, totalSize);
+    bits += totalSize * 8;
     OutputDebugStringA(log);
   }
+
+  sprintf(log, "%f fps %f kbps\n", ((float)i) / (last_frame_timestamp / 10'000'000),
+          bits / 1000.0f / (last_frame_timestamp / 10'000'000));
+  OutputDebugStringA(log);
 }
 
 void Encode::MainPage::Button_Click(Platform::Object ^ sender,
@@ -107,6 +130,7 @@ void DoEncode() {
     auto encoder = std::make_unique<webrtc::WinUWPH264EncoderImpl>();
     encoder->InitEncode(&codec, 0, 0);
     int i = 0;
+    char log[1024];
     while (!uncompressed_file.eof()) {
       int64_t timestampHns, durationHns;
       int32_t totalSize;
@@ -117,10 +141,12 @@ void DoEncode() {
       assert(totalSize == frame_size);
       uncompressed_file.read((char*)destBuffer.get(), totalSize);
 
-      char log[1024];
-      sprintf(log, "%d TS %lld D %lld S %d\n", i++, timestampHns / 10'000,
-              durationHns / 10'000, totalSize);
-      OutputDebugStringA(log);
+      // auto actualDurationHns = timestampHns - last_frame_timestamp;
+
+      // sprintf(log, "%d TS %lld D %lld AD %lld S %d\n", i++, timestampHns /
+      // 10'000, durationHns / 10'000, actualDurationHns / 10'000,
+      //        totalSize);
+      // OutputDebugStringA(log);
 
       webrtc::VideoFrame frame;
       frame.width_ = codec.width;
@@ -136,13 +162,13 @@ void DoEncode() {
         Sleep(time_to_sleep);
       }
       last_timestamp = now;
-	  last_frame_timestamp = timestampHns;
+      last_frame_timestamp = timestampHns;
 
-          encoder->Encode(frame, false);
+      encoder->Encode(frame, false);
     }
   }
 
-  ReadFile((folderNameA + "\\compressed.dat").c_str(), frame_size);
+  // ReadFile((folderNameA + "\\compressed.dat").c_str(), frame_size);
   ReadFile((folderNameA + "\\compressed_out.dat").c_str(), frame_size);
 }
 

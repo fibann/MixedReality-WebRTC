@@ -428,9 +428,12 @@ int WinUWPH264EncoderImpl::InitWriter() {
   ComPtr<IMFAttributes> encodingAttributes;
   ON_SUCCEEDED(MFCreateAttributes(&encodingAttributes, 1));
   //ON_SUCCEEDED(
-  //    encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 3 * frame_rate_));
+  //    encodingAttributes->SetUINT32(CODECAPI_AVEncCommonRateControlMode,
+  //                             eAVEncCommonRateControlMode_UnconstrainedVBR));
+  //ON_SUCCEEDED(
+  //    encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 4 * frame_rate_));
   ON_SUCCEEDED(
-      encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, 40));
+      encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, 45));
   ON_SUCCEEDED(
       sinkWriter_->SetInputMediaType(streamIndex_, mediaTypeIn.Get(), encodingAttributes.Get()));
 
@@ -665,18 +668,18 @@ void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
       return;
     }
 
-    int64_t now = rtc::TimeMillis();
-    bitrate_window_.AddSample(curLength * 8, now);
-    framerate_window_.AddSample(1, now);
-    if (now - last_stats_time_ > 1000) {
-      int bps = bitrate_window_.GetSumUpTo(now);
-	  int frames = framerate_window_.GetSumUpTo(now);
-      std::stringstream str;
-      str << "RATES: " << frames << " fps - " << bps / 1000 << " kbps";
-      str << "\n";
-      OutputDebugStringA(str.str().c_str());
-      last_stats_time_ = now;
-    }
+    //int64_t now = rtc::TimeMillis();
+    //bitrate_window_.AddSample(curLength * 8, now);
+    //framerate_window_.AddSample(1, now);
+    //if (now - last_stats_time_ > 1000) {
+    //  int bps = bitrate_window_.GetSumUpTo(now);
+    //  int frames = framerate_window_.GetSumUpTo(now);
+    //  std::stringstream str;
+    //  str << "RATES: " << frames << " fps - " << bps / 1000 << " kbps";
+    //  str << "\n";
+    //  OutputDebugStringA(str.str().c_str());
+    //  last_stats_time_ = now;
+    //}
 
 
     if (curLength == 0) {
