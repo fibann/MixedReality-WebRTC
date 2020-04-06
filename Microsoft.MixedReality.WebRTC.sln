@@ -32,6 +32,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestNetCoreConsole", "examp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Encode", "examples\Encode\Encode.vcxproj", "{E2E8A15F-9113-4E71-9F83-CFA09EDA2B0F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Encode-Console", "examples\Encode\Encode-Console.vcxproj", "{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -174,6 +176,20 @@ Global
 		{E2E8A15F-9113-4E71-9F83-CFA09EDA2B0F}.Release|x86.ActiveCfg = Release|Win32
 		{E2E8A15F-9113-4E71-9F83-CFA09EDA2B0F}.Release|x86.Build.0 = Release|Win32
 		{E2E8A15F-9113-4E71-9F83-CFA09EDA2B0F}.Release|x86.Deploy.0 = Release|Win32
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Debug|ARM.ActiveCfg = Debug|ARM
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Debug|ARM.Build.0 = Debug|ARM
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Debug|x64.ActiveCfg = Debug|x64
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Debug|x64.Build.0 = Debug|x64
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Debug|x86.ActiveCfg = Debug|Win32
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Debug|x86.Build.0 = Debug|Win32
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Release|ARM.ActiveCfg = Release|ARM
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Release|ARM.Build.0 = Release|ARM
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Release|ARM64.ActiveCfg = Release|Win32
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Release|x64.ActiveCfg = Release|x64
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Release|x64.Build.0 = Release|x64
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Release|x86.ActiveCfg = Release|Win32
+		{DD82A563-ADC0-4DD6-BD96-5069A31D8C6A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

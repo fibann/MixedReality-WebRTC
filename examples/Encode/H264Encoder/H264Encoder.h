@@ -21,6 +21,7 @@
 #include "../Utils/SampleAttributeQueue.h"
 #include "../Utils/Utils.h"
 #include <fstream>
+#include <functional>
 
 #pragma comment(lib, "mfreadwrite")
 #pragma comment(lib, "mfplat")
@@ -103,6 +104,8 @@ namespace webrtc {
 
 class H264MediaSink;
 
+using EncodedImageCallback = std::function<void(const uint8_t*, int64_t, int32_t)>;
+
 class WinUWPH264EncoderImpl : public IH264EncodingCallback {
  public:
   WinUWPH264EncoderImpl();
@@ -112,6 +115,7 @@ class WinUWPH264EncoderImpl : public IH264EncodingCallback {
   // === VideoEncoder overrides ===
   int InitEncode(const VideoCodec* codec_settings,
     int number_of_cores, size_t max_payload_size);
+  int RegisterEncodeCompleteCallback(EncodedImageCallback* callback);
   int Release();
   int Encode(const VideoFrame& input_image, bool keyframe);
   int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate);
@@ -135,6 +139,7 @@ class WinUWPH264EncoderImpl : public IH264EncodingCallback {
   bool inited_ {};
   ComPtr<IMFSinkWriter> sinkWriter_;
   ComPtr<H264MediaSink> mediaSink_;
+  EncodedImageCallback* encodedCompleteCallback_ {};
   DWORD streamIndex_ {};
   LONGLONG startTime_ {};
   LONGLONG lastTimestampHns_ {};
@@ -173,6 +178,7 @@ class WinUWPH264EncoderImpl : public IH264EncodingCallback {
 
   struct CachedFrameAttributes {
     uint32_t timestamp;
+    uint32_t duration;
     uint64_t ntpTime;
     uint64_t captureRenderTime;
     uint32_t frameWidth;

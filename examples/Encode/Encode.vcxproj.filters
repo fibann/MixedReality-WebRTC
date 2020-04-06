@@ -67,6 +67,7 @@
     <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\video_common.cc" />
     <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\psnr.cc" />
     <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\ssim.cc" />
+    <ClCompile Include="Encode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

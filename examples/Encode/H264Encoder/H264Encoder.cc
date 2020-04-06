@@ -1,12 +1,12 @@
 /*
-*  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
-*
-*  Use of this source code is governed by a BSD-style license
-*  that can be found in the LICENSE file in the root of the source
-*  tree. An additional intellectual property rights grant can be found
-*  in the file PATENTS.  All contributing project authors may
-*  be found in the AUTHORS file in the root of the source tree.
-*/
+ *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
 
 #include "H264Encoder.h"
 
@@ -198,6 +198,14 @@ static const float kMinRateVariation = 0.1f;
 // H264 WinUWP Encoder Implementation
 //////////////////////////////////////////
 
+WinUWPH264EncoderImpl::WinUWPH264EncoderImpl()
+{
+}
+
+WinUWPH264EncoderImpl::~WinUWPH264EncoderImpl() {
+//  Release();
+}
+
 namespace {
 using namespace Microsoft::WRL::Wrappers;
 using namespace Windows::Foundation;
@@ -259,9 +267,6 @@ bool IsHololens() {
 }
 }
 
-WinUWPH264EncoderImpl::WinUWPH264EncoderImpl() = default;
-WinUWPH264EncoderImpl::~WinUWPH264EncoderImpl() = default;
-
 int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
   int /*number_of_cores*/,
   size_t /*maxPayloadSize */) {
@@ -284,7 +289,8 @@ int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
 
   // WebRTC only passes the max frame rate so use it as the initial value for
   // the desired frame rate too.
-  frame_rate_ = codec_settings->maxFramerate;
+  frame_rate_ = 30;  // codec_settings->maxFramerate;
+
 
   //frame_dropping_on_ = codec_settings->H264().frameDroppingOn;
   //key_frame_interval_ = codec_settings->H264().keyFrameInterval;
@@ -302,52 +308,11 @@ int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
     target_bps_ = width_ * height_ * 2;
   }
 
+  target_bps_ = 1'000'000;
+
   // Configure the encoder.
   HRESULT hr = S_OK;
   ON_SUCCEEDED(MFStartup(MF_VERSION));
-
-  ComPtr<ABI::Windows::Storage::IApplicationDataStatics> appDataStatics;
-  ON_SUCCEEDED(Windows::Foundation::GetActivationFactory(
-      Microsoft::WRL::Wrappers::HStringReference(
-          RuntimeClass_Windows_Storage_ApplicationData)
-          .Get(),
-      &appDataStatics));
-  ComPtr<ABI::Windows::Storage::IApplicationData> appData;
-  ON_SUCCEEDED(appDataStatics->get_Current(&appData));
-  ComPtr<ABI::Windows::Storage::IStorageFolder> folder;
-  ON_SUCCEEDED(appData->get_LocalFolder(&folder));
-  ComPtr<ABI::Windows::Storage::IStorageItem> asItem;
-  ON_SUCCEEDED(folder.As(&asItem));
-  Microsoft::WRL::Wrappers::HString path;
-  ON_SUCCEEDED(asItem->get_Path(path.GetAddressOf()));
-
-  // ComPtr<ABI::Windows::Storage::IStorageFile> compressed_file_out;
-  // ComPtr<ABI::Windows::Storage::IStorageFile> uncompressed_file_out;
-  // ComPtr<ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Storage::StorageFile*>>
-  //    compressed_file_op;
-  // ComPtr<ABI::Windows::Foundation::IAsyncOperation<
-  //    ABI::Windows::Storage::StorageFile*>>
-  //    uncompressed_file_op;
-
-  // ON_SUCCEEDED(folder->CreateFileAsync(
-  //    Microsoft::WRL::Wrappers::HStringReference(L"compressed.dat").Get(),
-  //    ABI::Windows::Storage::CreationCollisionOption_ReplaceExisting,
-  //    &compressed_file_op));
-  // ON_SUCCEEDED(folder->CreateFileAsync(
-  //    Microsoft::WRL::Wrappers::HStringReference(L"uncompressed.dat").Get(),
-  //    ABI::Windows::Storage::CreationCollisionOption_ReplaceExisting,
-  //    &uncompressed_file_op));
-  // compressed_file_op->GetResults(&compressed_file_out);
-  // uncompressed_file_op->GetResults(&uncompressed_file_out);
-  unsigned length;
-  auto ptr = path.GetRawBuffer(&length);
-  std::string folderNameA(ptr, ptr + length);
-
-  compressed_file_out_.open(folderNameA + "\\compressed_out.dat",
-                            std::ifstream::binary);
-
-  bool is_ok = compressed_file_out_.good();
-  (void)is_ok;
 
   ON_SUCCEEDED(InitWriter());
 
@@ -427,9 +392,9 @@ int WinUWPH264EncoderImpl::InitWriter() {
   // SinkWriter encoder properties
   ComPtr<IMFAttributes> encodingAttributes;
   ON_SUCCEEDED(MFCreateAttributes(&encodingAttributes, 1));
-  //ON_SUCCEEDED(
-  //    encodingAttributes->SetUINT32(CODECAPI_AVEncCommonRateControlMode,
-  //                             eAVEncCommonRateControlMode_UnconstrainedVBR));
+  ON_SUCCEEDED(
+      encodingAttributes->SetUINT32(CODECAPI_AVEncCommonRateControlMode,
+                               eAVEncCommonRateControlMode_UnconstrainedVBR));
   ON_SUCCEEDED(
       encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 4 * frame_rate_));
   //ON_SUCCEEDED(
@@ -452,6 +417,13 @@ int WinUWPH264EncoderImpl::InitWriter() {
   }
 }
 
+int WinUWPH264EncoderImpl::RegisterEncodeCompleteCallback(
+  EncodedImageCallback* callback) {
+  AutoLock lock(&callbackCrit_);
+  encodedCompleteCallback_ = callback;
+  return 0;
+}
+
 int WinUWPH264EncoderImpl::ReleaseWriter() {
   // Use a temporary sink variable to prevent lock inversion
   // between the shutdown call and OnH264Encoded() callback.
@@ -470,6 +442,8 @@ int WinUWPH264EncoderImpl::ReleaseWriter() {
     inited_ = false;
     framePendingCount_ = 0;
     _sampleAttributeQueue.clear();
+    AutoLock callbackLock(&callbackCrit_);
+    encodedCompleteCallback_ = nullptr;
   }
 
   if (tmpMediaSink != nullptr) {
@@ -484,6 +458,8 @@ int WinUWPH264EncoderImpl::Release() {
   ON_SUCCEEDED(MFShutdown());
   return 0;
 }
+
+int64_t first_frame_ts = -1;
 
 ComPtr<IMFSample> WinUWPH264EncoderImpl::FromVideoFrame(const VideoFrame& frame) {
   HRESULT hr = S_OK;
@@ -500,7 +476,7 @@ ComPtr<IMFSample> WinUWPH264EncoderImpl::FromVideoFrame(const VideoFrame& frame)
   auto totalSize =
       dst_stride_y * encoded_height_ + dst_stride_uv * encoded_height_ / 2;
 
-  if (SUCCEEDED(hr)) {
+  //if (SUCCEEDED(hr)) {
     ComPtr<IMFMediaBuffer> mediaBuffer;
     ON_SUCCEEDED(MFCreateMemoryBuffer(totalSize, mediaBuffer.GetAddressOf()));
 
@@ -508,22 +484,21 @@ ComPtr<IMFSample> WinUWPH264EncoderImpl::FromVideoFrame(const VideoFrame& frame)
     if (SUCCEEDED(hr)) {
       DWORD cbMaxLength;
       DWORD cbCurrentLength;
-      ON_SUCCEEDED(mediaBuffer->Lock(&destBuffer, &cbMaxLength, &cbCurrentLength));
+      ON_SUCCEEDED(
+          mediaBuffer->Lock(&destBuffer, &cbMaxLength, &cbCurrentLength));
       std::memcpy(destBuffer, frame.video_frame_buffer_, totalSize);
     }
 
-
-
     if (firstFrame_) {
       firstFrame_ = false;
-      startTime_ = 0;  // frame.timestamp();
+      startTime_ = frame.timestamp();
     }
 
     auto timestampHns = GetFrameTimestampHns(frame);
     ON_SUCCEEDED(sample->SetSampleTime(timestampHns));
+    auto durationHns = timestampHns - lastTimestampHns_;
 
     if (SUCCEEDED(hr)) {
-      auto durationHns = timestampHns - lastTimestampHns_;
       hr = sample->SetSampleDuration(durationHns);
     }
 
@@ -551,8 +526,12 @@ ComPtr<IMFSample> WinUWPH264EncoderImpl::FromVideoFrame(const VideoFrame& frame)
       lastFrameDropped_ = false;
       sampleAttributes->SetUINT32(MFSampleExtension_Discontinuity, TRUE);
     }
-  }
+  //}
 
+  auto now = rtc::TimeMillis();
+  if (first_frame_ts < 0) {
+    first_frame_ts = now;
+  }
   return sample;
 }
 
@@ -590,21 +569,25 @@ int WinUWPH264EncoderImpl::Encode(
       rate_change_requested_ = false;
     }
   }
-
-      if (keyframe) {
-        debugLog << "Key frame requested in H264 encoder.";
-        std::stringstream str;
-        str << "Keyframe requested - last was "
-            << (frameCount_ - last_keyframe_req_frame_count) << " frames ago\n";
-        OutputDebugStringA(str.str().c_str());
-        last_keyframe_req_frame_count = frameCount_;
-        ComPtr<IMFSinkWriterEncoderConfig> encoderConfig;
-        sinkWriter_.As(&encoderConfig);
-        ComPtr<IMFAttributes> encoderAttributes;
-        MFCreateAttributes(&encoderAttributes, 1);
-        encoderAttributes->SetUINT32(CODECAPI_AVEncVideoForceKeyFrame, TRUE);
-        encoderConfig->PlaceEncodingParameters(streamIndex_, encoderAttributes.Get());
-      }
+  //if (frame_types != nullptr) {
+  //  for (auto frameType : *frame_types) {
+  //    if (frameType == kVideoFrameKey) {
+  //      RTC_LOG(LS_INFO) << "Key frame requested in H264 encoder.";
+  //      std::stringstream str;
+  //      str << "Keyframe requested - last was "
+  //          << (frameCount_ - last_keyframe_req_frame_count) << " frames ago\n";
+  //      OutputDebugStringA(str.str().c_str());
+  //      last_keyframe_req_frame_count = frameCount_;
+  //      ComPtr<IMFSinkWriterEncoderConfig> encoderConfig;
+  //      sinkWriter_.As(&encoderConfig);
+  //      ComPtr<IMFAttributes> encoderAttributes;
+  //      MFCreateAttributes(&encoderAttributes, 1);
+  //      encoderAttributes->SetUINT32(CODECAPI_AVEncVideoForceKeyFrame, TRUE);
+  //      encoderConfig->PlaceEncodingParameters(streamIndex_, encoderAttributes.Get());
+  //      break;
+  //    }
+  //  }
+  //}
 
   HRESULT hr = S_OK;
 
@@ -639,9 +622,12 @@ int WinUWPH264EncoderImpl::Encode(
   return 0;
 }
 
+int64_t first_decoded_ts = -1;
+
 void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
   DWORD totalLength;
   HRESULT hr = S_OK;
+  int64_t now = rtc::TimeMillis();
   ON_SUCCEEDED(sample->GetTotalLength(&totalLength));
 
   LONGLONG sampleTimestamp = 0;
@@ -691,12 +677,6 @@ void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
     sendBuffer.resize(curLength);
     memcpy(sendBuffer.data(), byteBuffer, curLength);
 
-    LONGLONG zero = 0;
-    compressed_file_out_.write((char*)&sampleTimestamp,
-                               sizeof(sampleTimestamp));
-    compressed_file_out_.write((char*)&zero, sizeof(zero));
-    compressed_file_out_.write((char*)&curLength, sizeof(curLength));
-    compressed_file_out_.write((char*)byteBuffer, curLength);
 
     hr = buffer->Unlock();
     if (FAILED(hr)) {
@@ -712,7 +692,15 @@ void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
     //  last_keyframe_produced_frame_count = frameCount_;
     //}
 
+    {
+      AutoLock lock(&callbackCrit_);
+      --framePendingCount_;
 
+	  if (encodedCompleteCallback_ != nullptr) {
+        (*encodedCompleteCallback_)(sendBuffer.data(),
+                                                 sampleTimestamp, curLength);
+      }
+    }
   }
 }
 
@@ -756,6 +744,7 @@ int WinUWPH264EncoderImpl::ReconfigureSinkWriter(UINT32 new_width,
                                                  UINT32 new_height,
                                                  UINT32 new_target_bps,
                                                  UINT32 new_frame_rate) {
+    #if 0
   // NOTE: must be called under crit_ lock.
   debugLog << "WinUWPH264EncoderImpl::ResetSinkWriter() " << new_width
                    << "x" << new_height << "@" << new_frame_rate << " "
@@ -794,6 +783,7 @@ int WinUWPH264EncoderImpl::ReconfigureSinkWriter(UINT32 new_width,
 
     last_rate_change_time_rtc_ms = rtc::TimeMillis();
   }
+  #endif
 
   return 0;
 }
