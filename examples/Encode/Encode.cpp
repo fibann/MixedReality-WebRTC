@@ -71,14 +71,16 @@ int64_t time_to_sleep;
 void DoEncode(std::ifstream& uncompressed_file,
               std::ofstream& compressed_file,
               int width,
-              int height) {
+              int height,
+              int framerate,
+    int bitrate) {
   webrtc::VideoCodec codec;
   codec.width = width;
   codec.height = height;
-  codec.maxFramerate = 30;
+  codec.maxFramerate = framerate;
   codec.maxBitrate = 2500;
-  codec.targetBitrate = 0;
-  codec.startBitrate = 1000;
+  codec.targetBitrate = bitrate;
+  codec.startBitrate = bitrate;
   int frame_size = codec.width * codec.height * 3 / 2;
 
   LONGLONG last_frame_timestamp = 0;

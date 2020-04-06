@@ -289,7 +289,7 @@ int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
 
   // WebRTC only passes the max frame rate so use it as the initial value for
   // the desired frame rate too.
-  frame_rate_ = 30;  // codec_settings->maxFramerate;
+  frame_rate_ = codec_settings->maxFramerate;
 
 
   //frame_dropping_on_ = codec_settings->H264().frameDroppingOn;
@@ -307,8 +307,6 @@ int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
     // the bandwidth that a 620 Windows phone can handle.
     target_bps_ = width_ * height_ * 2;
   }
-
-  target_bps_ = 1'000'000;
 
   // Configure the encoder.
   HRESULT hr = S_OK;
