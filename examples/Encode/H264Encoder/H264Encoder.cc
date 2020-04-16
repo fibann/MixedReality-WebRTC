@@ -395,8 +395,13 @@ int WinUWPH264EncoderImpl::InitWriter() {
                                eAVEncCommonRateControlMode_UnconstrainedVBR));
   ON_SUCCEEDED(
       encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 4 * frame_rate_));
-  //ON_SUCCEEDED(
-  //    encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, 45));
+
+  const uint64_t i_qp = 35;
+  const uint64_t p_qp = 37;
+  const uint64_t encoded_qp = i_qp | (p_qp << 16);
+
+  ON_SUCCEEDED(encodingAttributes->SetUINT64(
+      CODECAPI_AVEncVideoEncodeFrameTypeQP, encoded_qp));
   ON_SUCCEEDED(
       sinkWriter_->SetInputMediaType(streamIndex_, mediaTypeIn.Get(), encodingAttributes.Get()));
 
