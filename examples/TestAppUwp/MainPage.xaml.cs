@@ -668,6 +668,13 @@ namespace TestAppUwp
             // so that the former can render in the UI the video frames produced in the background by the later.
             localVideo.SetMediaPlayer(localVideoPlayer);
             remoteVideo.SetMediaPlayer(remoteVideoPlayer);
+
+            var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+            if (arch == "ARM")
+            {
+                VideoProfileComboBox.SelectedIndex = -1;
+                StartLocalMediaClicked(this, new RoutedEventArgs());
+            }
         }
 
         private void PreferredAudioCodecChecked(object sender, RoutedEventArgs args)
