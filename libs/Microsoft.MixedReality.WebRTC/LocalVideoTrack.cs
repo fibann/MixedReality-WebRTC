@@ -102,8 +102,8 @@ namespace Microsoft.MixedReality.WebRTC
             _selfHandle = Utils.MakeWrapperRef(this);
             LocalVideoTrackInterop.LocalVideoTrack_RegisterI420AFrameCallback(
                 _nativeHandle, _interopCallbackArgs.I420AFrameCallback, _selfHandle);
-            LocalVideoTrackInterop.LocalVideoTrack_RegisterArgb32FrameCallback(
-                _nativeHandle, _interopCallbackArgs.Argb32FrameCallback, _selfHandle);
+            //LocalVideoTrackInterop.LocalVideoTrack_RegisterArgb32FrameCallback(
+            //    _nativeHandle, _interopCallbackArgs.Argb32FrameCallback, _selfHandle);
         }
 
         /// <inheritdoc/>
