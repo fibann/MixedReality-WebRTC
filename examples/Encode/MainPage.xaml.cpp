@@ -30,26 +30,34 @@ using namespace Windows::UI::Xaml::Navigation;
 // The Blank Page item template is documented at
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
-void ReadFile(const char* filename, int frame_size);
-
-void DoEncode(const std::string& folderNameA, int width, int height);
+void ReadFile(std::ifstream& file, int frame_size);
+void DoEncode(std::ifstream& uncompressed_file,
+              std::ofstream& compressed_file,
+              int width,
+              int height,
+              int framerate,
+              int bitrate);
 
 MainPage::MainPage() {
   InitializeComponent();
-  auto current = Windows::Storage::ApplicationData::Current;
-  auto ppath = current->LocalFolder->Path;
-  std::wstring wpath(ppath->Data());
-  using convert_type = std::codecvt_utf8<wchar_t>;
-  std::wstring_convert<convert_type, wchar_t> converter;
-  std::string folderNameA = converter.to_bytes(wpath);
+  //auto current = Windows::Storage::ApplicationData::Current;
+  //auto ppath = current->LocalFolder->Path;
+  //std::wstring wpath(ppath->Data());
+  //using convert_type = std::codecvt_utf8<wchar_t>;
+  //std::wstring_convert<convert_type, wchar_t> converter;
+  //std::string folderNameA = converter.to_bytes(wpath);
 
-  const int WIDTH = 1280;
-  const int HEIGHT = 720;
+  //const int WIDTH = 1280;
+  //const int HEIGHT = 720;
 
-  int frame_size = WIDTH * HEIGHT * 3 / 2;
+  //int frame_size = WIDTH * HEIGHT * 3 / 2;
 
-    DoEncode(folderNameA, WIDTH, HEIGHT);
-  ReadFile((folderNameA + "\\uncompressed.dat").c_str(), frame_size);
-  ReadFile((folderNameA + "\\compressed_out.dat").c_str(), frame_size);
-   ReadFile((folderNameA + "\\compressed.dat").c_str(), frame_size);
+  //std::ifstream uncompressed_file((folderNameA + "\\uncompressed.dat").c_str(),
+  //                                std::ios_base::binary);
+  //std::ofstream compressed_file((folderNameA + "\\compressed.dat").c_str(),
+  //                                std::ios_base::binary);
+
+  //  DoEncode(uncompressed_file, compressed_file, WIDTH, HEIGHT, 30, 1000);
+  //ReadFile(uncompressed_file, frame_size);
+  //ReadFile(compressed_file, frame_size);
 }
