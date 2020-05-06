@@ -14,7 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="H264Encoder\H264Encoder.cc" />
     <ClCompile Include="H264Encoder\H264MediaSink.cc" />
     <ClCompile Include="H264Encoder\H264StreamSink.cc" />
     <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\source\compare.cc" />
@@ -68,6 +67,7 @@
     <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\psnr.cc" />
     <ClCompile Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\ssim.cc" />
     <ClCompile Include="Encode.cpp" />
+    <ClCompile Include="H264Encoder\H264Encoder2.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

@@ -191,7 +191,7 @@ static const int kHighH264QpThreshold = 37;
 // end up being off the requested value by a small amount in the long term. We
 // should not ignore small variations but possibly use a longer min interval so
 // they are eventually applied.
-static const int kMinIntervalBetweenRateChangesMs = 5000;
+static const int kMinIntervalBetweenRateChangesMs = 0;
 static const float kMinRateVariation = 0.1f;
 
 //////////////////////////////////////////
@@ -203,7 +203,7 @@ WinUWPH264EncoderImpl::WinUWPH264EncoderImpl()
 }
 
 WinUWPH264EncoderImpl::~WinUWPH264EncoderImpl() {
-//  Release();
+  Release();
 }
 
 namespace {
@@ -367,8 +367,10 @@ int WinUWPH264EncoderImpl::InitWriter() {
   ON_SUCCEEDED(MFSetAttributeRatio(mediaTypeIn.Get(),
     MF_MT_FRAME_RATE, frame_rate_, 1));
 
-  // Create the media sink
-  ON_SUCCEEDED(Microsoft::WRL::MakeAndInitialize<H264MediaSink>(&mediaSink_));
+  //// Create the media sink
+  // ON_SUCCEEDED(Microsoft::WRL::MakeAndInitialize<H264MediaSink>(&mediaSink_));
+  //// Register this as the callback for encoded samples.
+  // ON_SUCCEEDED(mediaSink_->RegisterEncodingCallback(this));
 
   // SinkWriter creation attributes
   ComPtr<IMFAttributes> sinkWriterCreationAttributes;
@@ -381,32 +383,33 @@ int WinUWPH264EncoderImpl::InitWriter() {
     MF_LOW_LATENCY, TRUE));
 
   // Create the sink writer
-  ON_SUCCEEDED(MFCreateSinkWriterFromMediaSink(mediaSink_.Get(),
-    sinkWriterCreationAttributes.Get(), &sinkWriter_));
+  //ON_SUCCEEDED(MFCreateSinkWriterFromMediaSink(mediaSink_.Get(),
+  //  sinkWriterCreationAttributes.Get(), &sinkWriter_));
+  MFCreateSinkWriterFromURL(
+      LR"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed.mp4)", nullptr,
+      sinkWriterCreationAttributes.Get(), &sinkWriter_);
 
   // Add the h264 output stream to the writer
   ON_SUCCEEDED(sinkWriter_->AddStream(mediaTypeOut.Get(), &streamIndex_));
 
   // SinkWriter encoder properties
   ComPtr<IMFAttributes> encodingAttributes;
-  ON_SUCCEEDED(MFCreateAttributes(&encodingAttributes, 1));
+  ON_SUCCEEDED(MFCreateAttributes(&encodingAttributes, 3));
   ON_SUCCEEDED(
       encodingAttributes->SetUINT32(CODECAPI_AVEncCommonRateControlMode,
                                eAVEncCommonRateControlMode_UnconstrainedVBR));
   ON_SUCCEEDED(
       encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 4 * frame_rate_));
 
-  const uint64_t i_qp = 35;
-  const uint64_t p_qp = 37;
-  const uint64_t encoded_qp = i_qp | (p_qp << 16);
+  //const uint64_t i_qp = 26;
+  //const uint64_t p_qp = 26;
+  //const uint64_t b_qp = 26;
+  //const uint64_t encoded_qp = i_qp | (p_qp << 16) | (b_qp << 32);
 
-  ON_SUCCEEDED(encodingAttributes->SetUINT64(
-      CODECAPI_AVEncVideoEncodeFrameTypeQP, encoded_qp));
+  //ON_SUCCEEDED(
+      //encodingAttributes->SetUINT32(CODECAPI_AVEncCommonQuality, 0));
   ON_SUCCEEDED(
       sinkWriter_->SetInputMediaType(streamIndex_, mediaTypeIn.Get(), encodingAttributes.Get()));
-
-  // Register this as the callback for encoded samples.
-  ON_SUCCEEDED(mediaSink_->RegisterEncodingCallback(this));
 
   ON_SUCCEEDED(sinkWriter_->BeginWriting());
 
@@ -434,6 +437,7 @@ int WinUWPH264EncoderImpl::ReleaseWriter() {
 
   {
     AutoLock lock(&crit_);
+    sinkWriter_->Finalize();
     sinkWriter_.Reset();
     if (mediaSink_ != nullptr) {
       tmpMediaSink = mediaSink_;
@@ -598,9 +602,9 @@ int WinUWPH264EncoderImpl::Encode(
   {
     AutoLock lock(&crit_);
     // Only encode the frame if the encoder pipeline is not full.
-    if (_sampleAttributeQueue.size() <= 2) {
+    //if (_sampleAttributeQueue.size() <= 2) {
       sample = FromVideoFrame(frame);
-    }
+    //}
   }
 
   if (!sample) {
@@ -626,6 +630,101 @@ int WinUWPH264EncoderImpl::Encode(
 }
 
 int64_t first_decoded_ts = -1;
+
+class RTPFragmentationHeader {
+ public:
+  RTPFragmentationHeader();
+  RTPFragmentationHeader(const RTPFragmentationHeader&) = delete;
+  RTPFragmentationHeader(RTPFragmentationHeader&& other);
+  RTPFragmentationHeader& operator=(const RTPFragmentationHeader& other) =
+      delete;
+  RTPFragmentationHeader& operator=(RTPFragmentationHeader&& other);
+  ~RTPFragmentationHeader();
+
+  friend void swap(RTPFragmentationHeader& a, RTPFragmentationHeader& b);
+
+  void CopyFrom(const RTPFragmentationHeader& src);
+  void VerifyAndAllocateFragmentationHeader(size_t size) { Resize(size); }
+
+  void Resize(size_t size);
+  size_t Size() const { return fragmentationVectorSize; }
+
+  size_t Offset(size_t index) const { return fragmentationOffset[index]; }
+  size_t Length(size_t index) const { return fragmentationLength[index]; }
+  uint16_t TimeDiff(size_t index) const { return fragmentationTimeDiff[index]; }
+  int PayloadType(size_t index) const { return fragmentationPlType[index]; }
+
+  // TODO(danilchap): Move all members to private section,
+  // simplify by replacing 4 raw arrays with single std::vector<Fragment>
+  uint16_t fragmentationVectorSize;  // Number of fragmentations
+  size_t* fragmentationOffset;       // Offset of pointer to data for each
+                                     // fragmentation
+  size_t* fragmentationLength;       // Data size for each fragmentation
+  uint16_t* fragmentationTimeDiff;   // Timestamp difference relative "now" for
+                                     // each fragmentation
+  uint8_t* fragmentationPlType;      // Payload type of each fragmentation
+};
+void RTPFragmentationHeader::Resize(size_t size) {
+  const uint16_t size16 = static_cast<uint16_t>(size);
+  if (fragmentationVectorSize < size16) {
+    uint16_t oldVectorSize = fragmentationVectorSize;
+    {
+      // offset
+      size_t* oldOffsets = fragmentationOffset;
+      fragmentationOffset = new size_t[size16];
+      memset(fragmentationOffset + oldVectorSize, 0,
+             sizeof(size_t) * (size16 - oldVectorSize));
+      // copy old values
+      memcpy(fragmentationOffset, oldOffsets, sizeof(size_t) * oldVectorSize);
+      delete[] oldOffsets;
+    }
+    // length
+    {
+      size_t* oldLengths = fragmentationLength;
+      fragmentationLength = new size_t[size16];
+      memset(fragmentationLength + oldVectorSize, 0,
+             sizeof(size_t) * (size16 - oldVectorSize));
+      memcpy(fragmentationLength, oldLengths, sizeof(size_t) * oldVectorSize);
+      delete[] oldLengths;
+    }
+    // time diff
+    {
+      uint16_t* oldTimeDiffs = fragmentationTimeDiff;
+      fragmentationTimeDiff = new uint16_t[size16];
+      memset(fragmentationTimeDiff + oldVectorSize, 0,
+             sizeof(uint16_t) * (size16 - oldVectorSize));
+      memcpy(fragmentationTimeDiff, oldTimeDiffs,
+             sizeof(uint16_t) * oldVectorSize);
+      delete[] oldTimeDiffs;
+    }
+    // payload type
+    {
+      uint8_t* oldTimePlTypes = fragmentationPlType;
+      fragmentationPlType = new uint8_t[size16];
+      memset(fragmentationPlType + oldVectorSize, 0,
+             sizeof(uint8_t) * (size16 - oldVectorSize));
+      memcpy(fragmentationPlType, oldTimePlTypes,
+             sizeof(uint8_t) * oldVectorSize);
+      delete[] oldTimePlTypes;
+    }
+    fragmentationVectorSize = size16;
+  }
+}
+RTPFragmentationHeader::RTPFragmentationHeader()
+    : fragmentationVectorSize(0),
+      fragmentationOffset(nullptr),
+      fragmentationLength(nullptr),
+      fragmentationTimeDiff(nullptr),
+      fragmentationPlType(nullptr) {}
+
+
+RTPFragmentationHeader::~RTPFragmentationHeader() {
+  delete[] fragmentationOffset;
+  delete[] fragmentationLength;
+  delete[] fragmentationTimeDiff;
+  delete[] fragmentationPlType;
+}
+
 
 void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
   DWORD totalLength;
@@ -686,13 +785,63 @@ void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
       return;
     }
 
+    bool keyframe = false;
+
+    ComPtr<IMFAttributes> sampleAttributes;
+    hr = sample.As(&sampleAttributes);
+    if (SUCCEEDED(hr)) {
+      UINT32 cleanPoint;
+      hr = sampleAttributes->GetUINT32(MFSampleExtension_CleanPoint,
+                                       &cleanPoint);
+      if (SUCCEEDED(hr) && cleanPoint) {
+        keyframe = true;
+      }
+    }
+
+    // Scan for and create mark all fragments.
+    RTPFragmentationHeader fragmentationHeader;
+    uint32_t fragIdx = 0;
+    for (uint32_t i = 0; i < sendBuffer.size() - 5; ++i) {
+      byte* ptr = sendBuffer.data() + i;
+      int prefixLengthFound = 0;
+      if (ptr[0] == 0x00 && ptr[1] == 0x00 && ptr[2] == 0x00 &&
+          ptr[3] == 0x01 &&
+          ((ptr[4] & 0x1f) != 0x09 /* ignore access unit delimiters */)) {
+        prefixLengthFound = 4;
+      } else if (ptr[0] == 0x00 && ptr[1] == 0x00 && ptr[2] == 0x01 &&
+                 ((ptr[3] & 0x1f) !=
+                  0x09 /* ignore access unit delimiters */)) {
+        prefixLengthFound = 3;
+      }
+
+      // Found a key frame, mark is as such in case
+      // MFSampleExtension_CleanPoint wasn't set on the sample.
+      if (prefixLengthFound > 0 && (ptr[prefixLengthFound] & 0x1f) == 0x05) {
+        keyframe = true;
+      }
+
+      if (prefixLengthFound > 0) {
+        fragmentationHeader.VerifyAndAllocateFragmentationHeader(fragIdx + 1);
+        fragmentationHeader.fragmentationOffset[fragIdx] =
+            i + prefixLengthFound;
+        fragmentationHeader.fragmentationLength[fragIdx] =
+            0;  // We'll set that later
+        // Set the length of the previous fragment.
+        if (fragIdx > 0) {
+          fragmentationHeader.fragmentationLength[fragIdx - 1] =
+              i - fragmentationHeader.fragmentationOffset[fragIdx - 1];
+        }
+        fragmentationHeader.fragmentationPlType[fragIdx] = 0;
+        fragmentationHeader.fragmentationTimeDiff[fragIdx] = 0;
+        ++fragIdx;
+        i += 5;
+      }
+    }
+
     //if (keyframe) {
-    //  std::stringstream str;
-    //  str << "Keyframe produced. Last was "
-    //      << (frameCount_ - last_keyframe_produced_frame_count)
-    //      << " frames ago\n";
-    //  OutputDebugStringA(str.str().c_str());
-    //  last_keyframe_produced_frame_count = frameCount_;
+    //  OutputDebugStringA("Keyframe\n");
+    //} else {
+    //  OutputDebugStringA("Delta frame\n");
     //}
 
     {

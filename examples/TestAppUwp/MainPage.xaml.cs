@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.MixedReality.WebRTC;
 using TestAppUwp.Video;
 using Windows.ApplicationModel;
+using Windows.Graphics.Holographic;
 using Windows.Media.Capture;
 using Windows.Media.Core;
 using Windows.Media.MediaProperties;
@@ -669,8 +670,7 @@ namespace TestAppUwp
             localVideo.SetMediaPlayer(localVideoPlayer);
             remoteVideo.SetMediaPlayer(remoteVideoPlayer);
 
-            var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
-            if (arch == "ARM")
+            if (HolographicSpace.IsAvailable)
             {
                 VideoProfileComboBox.SelectedIndex = -1;
                 StartLocalMediaClicked(this, new RoutedEventArgs());

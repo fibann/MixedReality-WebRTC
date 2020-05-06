@@ -2,6 +2,7 @@
 // MainPage.xaml.cpp
 // Implementation of the MainPage class.
 //
+#define NOMINMAX
 
 #include <assert.h>
 
@@ -11,9 +12,11 @@
 
 #include "H264Encoder/H264Encoder.h"
 #include <atomic>
+#include <cstddef>
+#include <algorithm>
 
 
-void ReadFile(std::ifstream& file, int frame_size) {
+void ReadFile(std::ifstream& file, int frame_size, int num_frames = 100) {
   auto destBuffer = new char[frame_size];
 
   int i = 0;
@@ -24,7 +27,7 @@ void ReadFile(std::ifstream& file, int frame_size) {
   int bits_at_last_second = 0;
   int bits = 0;
   char log[1024];
-  while (!file.eof()) {
+  while (i < num_frames && !file.eof()) {
     int64_t timestampHns, durationHns;
     int32_t totalSize, delivery_ts{};
 
@@ -73,7 +76,8 @@ void DoEncode(std::ifstream& uncompressed_file,
               int width,
               int height,
               int framerate,
-    int bitrate) {
+    int bitrate,
+    int num_frames = 100) {
   webrtc::VideoCodec codec;
   codec.width = width;
   codec.height = height;
@@ -113,7 +117,7 @@ void DoEncode(std::ifstream& uncompressed_file,
     int i = 0;
     char log[1024];
     int64_t first_delivery_ts = -1;
-    while (!uncompressed_file.eof()) {
+    while (i < num_frames && !uncompressed_file.eof()) {
       int64_t timestampHns, durationHns;
       int32_t totalSize;
       int32_t delivery_ts;

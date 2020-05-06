@@ -317,7 +317,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="Encode.cpp" />
-    <ClCompile Include="H264Encoder\H264Encoder.cc" />
+    <ClCompile Include="H264Encoder\H264Encoder2.cc" />
     <ClCompile Include="H264Encoder\H264MediaSink.cc" />
     <ClCompile Include="H264Encoder\H264StreamSink.cc" />
     <ClCompile Include="MainPage.xaml.cpp">

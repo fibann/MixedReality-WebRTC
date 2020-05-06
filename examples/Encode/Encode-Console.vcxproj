@@ -240,7 +240,7 @@
   <ItemGroup>
     <ClCompile Include="Encode-Console.cpp" />
     <ClCompile Include="Encode.cpp" />
-    <ClCompile Include="H264Encoder\H264Encoder.cc" />
+    <ClCompile Include="H264Encoder\H264Encoder2.cc" />
     <ClCompile Include="H264Encoder\H264MediaSink.cc" />
     <ClCompile Include="H264Encoder\H264StreamSink.cc" />
     <ClCompile Include="libyuv\source\compare.cc" />
