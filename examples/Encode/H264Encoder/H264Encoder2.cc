@@ -367,10 +367,8 @@ int WinUWPH264EncoderImpl::InitWriter() {
   ON_SUCCEEDED(MFSetAttributeRatio(mediaTypeIn.Get(),
     MF_MT_FRAME_RATE, frame_rate_, 1));
 
-  //// Create the media sink
-  // ON_SUCCEEDED(Microsoft::WRL::MakeAndInitialize<H264MediaSink>(&mediaSink_));
-  //// Register this as the callback for encoded samples.
-  // ON_SUCCEEDED(mediaSink_->RegisterEncodingCallback(this));
+  // Create the media sink
+   ON_SUCCEEDED(Microsoft::WRL::MakeAndInitialize<H264MediaSink>(&mediaSink_));
 
   // SinkWriter creation attributes
   ComPtr<IMFAttributes> sinkWriterCreationAttributes;
@@ -383,23 +381,30 @@ int WinUWPH264EncoderImpl::InitWriter() {
     MF_LOW_LATENCY, TRUE));
 
   // Create the sink writer
-  //ON_SUCCEEDED(MFCreateSinkWriterFromMediaSink(mediaSink_.Get(),
-  //  sinkWriterCreationAttributes.Get(), &sinkWriter_));
-  MFCreateSinkWriterFromURL(
-      LR"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed.mp4)", nullptr,
-      sinkWriterCreationAttributes.Get(), &sinkWriter_);
+  ON_SUCCEEDED(MFCreateSinkWriterFromMediaSink(mediaSink_.Get(),
+    sinkWriterCreationAttributes.Get(), &sinkWriter_));
+  //MFCreateSinkWriterFromURL(
+  //    LR"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed.mp4)", nullptr,
+  //    sinkWriterCreationAttributes.Get(), &sinkWriter_);
 
   // Add the h264 output stream to the writer
   ON_SUCCEEDED(sinkWriter_->AddStream(mediaTypeOut.Get(), &streamIndex_));
 
+  // Register this as the callback for encoded samples.
+  ON_SUCCEEDED(mediaSink_->RegisterEncodingCallback(this));
+
   // SinkWriter encoder properties
   ComPtr<IMFAttributes> encodingAttributes;
   ON_SUCCEEDED(MFCreateAttributes(&encodingAttributes, 3));
-  ON_SUCCEEDED(
-      encodingAttributes->SetUINT32(CODECAPI_AVEncCommonRateControlMode,
-                               eAVEncCommonRateControlMode_UnconstrainedVBR));
+  ON_SUCCEEDED(encodingAttributes->SetUINT32(
+      CODECAPI_AVEncCommonRateControlMode,
+      eAVEncCommonRateControlMode_UnconstrainedVBR));
   ON_SUCCEEDED(
       encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 4 * frame_rate_));
+   ON_SUCCEEDED(encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, 45));
+
+  ON_SUCCEEDED(
+      encodingAttributes->SetUINT32(CODECAPI_AVEncCommonQuality, 55));
 
   //const uint64_t i_qp = 26;
   //const uint64_t p_qp = 26;

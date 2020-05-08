@@ -67,6 +67,33 @@ void ReadFile(std::ifstream& file, int frame_size, int num_frames = 100) {
           ((float)i) / (last_frame_timestamp / 10'000'000),
           bits / 1000.0f / (last_frame_timestamp / 10'000'000));
   OutputDebugStringA(log);
+  ++i;
+}
+
+void StripHeaders(std::istream& file, std::ostream& out, int num_frames = 100) {
+  std::vector<char> buffer;
+
+  int i = 0;
+  LONGLONG last_frame_timestamp = 0;
+  int last_delivery_timestamp = 0;
+  int64_t last_second = 0;
+  int frames_at_last_second = 0;
+  int bits_at_last_second = 0;
+  int bits = 0;
+  char log[1024];
+  while (i < num_frames && !file.eof()) {
+    int64_t timestampHns, durationHns;
+    int32_t totalSize, delivery_ts{};
+
+    file.read((char*)&timestampHns, sizeof(timestampHns));
+    file.read((char*)&durationHns, sizeof(durationHns));
+    // file.read((char*)&delivery_ts, sizeof(delivery_ts));
+    file.read((char*)&totalSize, sizeof(totalSize));
+    buffer.resize(std::max((int)buffer.size(), totalSize));
+    file.read(buffer.data(), totalSize);
+    out.write(buffer.data(), totalSize);
+    ++i;
+  }
 }
 
 int64_t time_to_sleep;
@@ -162,9 +189,164 @@ void DoEncode(std::ifstream& uncompressed_file,
       encoder->Encode(frame, false);
 
       while (!arrived.load(std::memory_order::memory_order_acquire)) {
-        Sleep(1);
+        Sleep(33);
       }
       arrived.store(false, std::memory_order_relaxed);
     }
   }
 }
+
+//
+//
+//HRESULT InitializeSinkWriter(IMFSinkWriter** ppWriter, DWORD* pStreamIndex) {
+//  *ppWriter = NULL;
+//  *pStreamIndex = NULL;
+//
+//  IMFSinkWriter* pSinkWriter = NULL;
+//  IMFMediaType* pMediaTypeOut = NULL;
+//  IMFMediaType* pMediaTypeIn = NULL;
+//  DWORD streamIndex;
+//
+//  HRESULT hr =
+//      MFCreateSinkWriterFromURL(L"output.wmv", NULL, NULL, &pSinkWriter);
+//
+//  // Set the output media type.
+//  if (SUCCEEDED(hr)) {
+//    hr = MFCreateMediaType(&pMediaTypeOut);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pMediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pMediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_WMV3);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, VIDEO_BIT_RATE);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pMediaTypeOut->SetUINT32(MF_MT_INTERLACE_MODE,
+//                                  MFVideoInterlace_Progressive);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = MFSetAttributeSize(pMediaTypeOut, MF_MT_FRAME_SIZE, VIDEO_WIDTH,
+//                            VIDEO_HEIGHT);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_FRAME_RATE, VIDEO_FPS, 1);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pSinkWriter->AddStream(pMediaTypeOut, &streamIndex);
+//  }
+//
+//  // Set the input media type.
+//  if (SUCCEEDED(hr)) {
+//    hr = MFCreateMediaType(&pMediaTypeIn);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pMediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pMediaTypeIn->SetGUID(MF_MT_SUBTYPE, VIDEO_INPUT_FORMAT);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pMediaTypeIn->SetUINT32(MF_MT_INTERLACE_MODE,
+//                                 MFVideoInterlace_Progressive);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = MFSetAttributeSize(pMediaTypeIn, MF_MT_FRAME_SIZE, VIDEO_WIDTH,
+//                            VIDEO_HEIGHT);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = MFSetAttributeRatio(pMediaTypeIn, MF_MT_FRAME_RATE, VIDEO_FPS, 1);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = MFSetAttributeRatio(pMediaTypeIn, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pSinkWriter->SetInputMediaType(streamIndex, pMediaTypeIn, NULL);
+//  }
+//
+//  // Tell the sink writer to start accepting data.
+//  if (SUCCEEDED(hr)) {
+//    hr = pSinkWriter->BeginWriting();
+//  }
+//
+//  // Return the pointer to the caller.
+//  if (SUCCEEDED(hr)) {
+//    *ppWriter = pSinkWriter;
+//    (*ppWriter)->AddRef();
+//    *pStreamIndex = streamIndex;
+//  }
+//
+//  SafeRelease(&pSinkWriter);
+//  SafeRelease(&pMediaTypeOut);
+//  SafeRelease(&pMediaTypeIn);
+//  return hr;
+//}
+//
+//HRESULT WriteFrame(IMFSinkWriter* pWriter,
+//                   DWORD streamIndex,
+//                   const LONGLONG& rtStart  // Time stamp.
+//) {
+//  IMFSample* pSample = NULL;
+//  IMFMediaBuffer* pBuffer = NULL;
+//
+//  const LONG cbWidth = 4 * VIDEO_WIDTH;
+//  const DWORD cbBuffer = cbWidth * VIDEO_HEIGHT;
+//
+//  BYTE* pData = NULL;
+//
+//  // Create a new memory buffer.
+//  HRESULT hr = MFCreateMemoryBuffer(cbBuffer, &pBuffer);
+//
+//  // Lock the buffer and copy the video frame to the buffer.
+//  if (SUCCEEDED(hr)) {
+//    hr = pBuffer->Lock(&pData, NULL, NULL);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = MFCopyImage(pData,                    // Destination buffer.
+//                     cbWidth,                  // Destination stride.
+//                     (BYTE*)videoFrameBuffer,  // First row in source image.
+//                     cbWidth,                  // Source stride.
+//                     cbWidth,                  // Image width in bytes.
+//                     VIDEO_HEIGHT              // Image height in pixels.
+//    );
+//  }
+//  if (pBuffer) {
+//    pBuffer->Unlock();
+//  }
+//
+//  // Set the data length of the buffer.
+//  if (SUCCEEDED(hr)) {
+//    hr = pBuffer->SetCurrentLength(cbBuffer);
+//  }
+//
+//  // Create a media sample and add the buffer to the sample.
+//  if (SUCCEEDED(hr)) {
+//    hr = MFCreateSample(&pSample);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pSample->AddBuffer(pBuffer);
+//  }
+//
+//  // Set the time stamp and the duration.
+//  if (SUCCEEDED(hr)) {
+//    hr = pSample->SetSampleTime(rtStart);
+//  }
+//  if (SUCCEEDED(hr)) {
+//    hr = pSample->SetSampleDuration(VIDEO_FRAME_DURATION);
+//  }
+//
+//  // Send the sample to the Sink Writer.
+//  if (SUCCEEDED(hr)) {
+//    hr = pWriter->WriteSample(streamIndex, pSample);
+//  }
+//
+//  SafeRelease(&pSample);
+//  SafeRelease(&pBuffer);
+//  return hr;
+//}
+
