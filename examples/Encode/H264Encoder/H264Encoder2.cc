@@ -403,8 +403,8 @@ int WinUWPH264EncoderImpl::InitWriter() {
       encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 4 * frame_rate_));
    ON_SUCCEEDED(encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, 45));
 
-  ON_SUCCEEDED(
-      encodingAttributes->SetUINT32(CODECAPI_AVEncCommonQuality, 55));
+  //ON_SUCCEEDED(
+  //    encodingAttributes->SetUINT32(CODECAPI_AVEncCommonQuality, 55));
 
   //const uint64_t i_qp = 26;
   //const uint64_t p_qp = 26;
@@ -731,6 +731,8 @@ RTPFragmentationHeader::~RTPFragmentationHeader() {
 }
 
 
+std::vector<byte> sendBuffer;
+
 void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
   DWORD totalLength;
   HRESULT hr = S_OK;
@@ -776,13 +778,15 @@ void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
 
 
     if (curLength == 0) {
-      debugLog << "Got empty sample.";
+      debugLog << "WARNING Got empty sample.\n";
       buffer->Unlock();
+      (*encodedCompleteCallback_)(nullptr, sampleTimestamp,
+                                  0);
       return;
+    } else {
+      sendBuffer.resize(curLength);
+      memcpy(sendBuffer.data(), byteBuffer, curLength);
     }
-    std::vector<byte> sendBuffer;
-    sendBuffer.resize(curLength);
-    memcpy(sendBuffer.data(), byteBuffer, curLength);
 
 
     hr = buffer->Unlock();

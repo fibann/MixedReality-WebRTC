@@ -14,6 +14,7 @@
 #include <atomic>
 #include <cstddef>
 #include <algorithm>
+#include <iostream>
 
 
 void ReadFile(std::ifstream& file, int frame_size, int num_frames = 100) {
@@ -96,6 +97,58 @@ void StripHeaders(std::istream& file, std::ostream& out, int num_frames = 100) {
   }
 }
 
+
+struct Frame {
+  int64_t timestampHns, durationHns;
+  int32_t totalSize, delivery_ts{};
+  std::vector<char> buffer;
+};
+
+void Read(std::istream& file, Frame& frame) {
+  file.read((char*)&frame.timestampHns, sizeof(frame.timestampHns));
+  file.read((char*)&frame.durationHns, sizeof(frame.durationHns));
+  // file.read((char*)&delivery_ts, sizeof(delivery_ts));
+  file.read((char*)&frame.totalSize, sizeof(frame.totalSize));
+  frame.buffer.resize(std::max((int)frame.buffer.size(), frame.totalSize));
+  file.read(frame.buffer.data(), frame.totalSize);
+
+}
+
+void RemoveMissingFrames(std::istream& uncompressed,
+                        std::istream& compressed, std::ostream& out,
+                        int num_frames = INT_MAX) {
+  std::vector<char> buffer;
+
+  int i = 0;
+  LONGLONG last_frame_timestamp = 0;
+  int last_delivery_timestamp = 0;
+  int64_t last_second = 0;
+  int frames_at_last_second = 0;
+  int bits_at_last_second = 0;
+  int bits = 0;
+  char log[1024];
+  while (i < num_frames && !uncompressed.eof() && !compressed.eof()) {
+    Frame frame_u;
+    Frame frame_c;
+    Read(compressed, frame_c);
+    Read(uncompressed, frame_u);
+    std::cout << i << ": " << frame_u.timestampHns << " - " << frame_c.timestampHns << std::endl;
+    while (frame_u.timestampHns / 10000 < frame_c.timestampHns / 10000) {
+      Read(uncompressed, frame_u);
+      std::cout << frame_u.timestampHns << std::endl;
+    }
+
+
+    //assert(frame_u.timestampHns == frame_c.timestampHns);
+
+    out.write((char*)&frame_u.timestampHns, sizeof(frame_u.timestampHns));
+    out.write((char*)&frame_u.durationHns, sizeof(frame_u.durationHns));
+    out.write((char*)&frame_u.totalSize, sizeof(frame_u.totalSize));
+    out.write((char*)frame_u.buffer.data(), frame_u.totalSize);
+    ++i;
+  }
+}
+
 int64_t time_to_sleep;
 
 void DoEncode(std::ifstream& uncompressed_file,
@@ -128,16 +181,17 @@ void DoEncode(std::ifstream& uncompressed_file,
     webrtc::EncodedImageCallback cb = [&](const uint8_t* byteBuffer, int64_t sampleTimestamp,
                                   int32_t curLength) {
        LONGLONG zero = 0;
-      // if (first_decoded_ts < 0) {
-      //  first_decoded_ts = now;
-      //}
-      // int32_t now_delta = (int32_t)(now - first_decoded_ts);
-       compressed_file.write((char*)&sampleTimestamp,
-                                 sizeof(sampleTimestamp));
-       compressed_file.write((char*)&zero, sizeof(zero));
-      //compressed_file.write((char*)&now_delta, sizeof(now_delta));
-       compressed_file.write((char*)&curLength, sizeof(curLength));
-       compressed_file.write((char*)byteBuffer, curLength);
+      if (curLength) {
+        // if (first_decoded_ts < 0) {
+        //  first_decoded_ts = now;
+        //}
+        // int32_t now_delta = (int32_t)(now - first_decoded_ts);
+        compressed_file.write((char*)&sampleTimestamp, sizeof(sampleTimestamp));
+        compressed_file.write((char*)&zero, sizeof(zero));
+        // compressed_file.write((char*)&now_delta, sizeof(now_delta));
+        compressed_file.write((char*)&curLength, sizeof(curLength));
+        compressed_file.write((char*)byteBuffer, curLength);
+      }
       arrived.store(true, std::memory_order::memory_order_release);
     };
     encoder->RegisterEncodeCompleteCallback(&cb);
