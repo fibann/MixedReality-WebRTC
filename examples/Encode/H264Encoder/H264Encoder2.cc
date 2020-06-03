@@ -340,9 +340,7 @@ int WinUWPH264EncoderImpl::InitWriter() {
   ON_SUCCEEDED(MFCreateMediaType(&mediaTypeOut));
   ON_SUCCEEDED(mediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video));
   ON_SUCCEEDED(mediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264));
-  // Lumia 635 and Lumia 1520 Windows phones don't work well
-  // with constrained baseline profile.
-  //ON_SUCCEEDED(mediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, eAVEncH264VProfile_ConstrainedBase));
+  ON_SUCCEEDED(mediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, eAVEncH264VProfile_Main));
 
   ON_SUCCEEDED(mediaTypeOut->SetUINT32(
     MF_MT_AVG_BITRATE, target_bps_));
@@ -396,23 +394,18 @@ int WinUWPH264EncoderImpl::InitWriter() {
   // SinkWriter encoder properties
   ComPtr<IMFAttributes> encodingAttributes;
   ON_SUCCEEDED(MFCreateAttributes(&encodingAttributes, 3));
-  ON_SUCCEEDED(encodingAttributes->SetUINT32(
-      CODECAPI_AVEncCommonRateControlMode,
-      eAVEncCommonRateControlMode_UnconstrainedVBR));
+  //ON_SUCCEEDED(encodingAttributes->SetUINT32(
+  //    CODECAPI_AVEncCommonRateControlMode,
+  //    eAVEncCommonRateControlMode_UnconstrainedVBR));
   ON_SUCCEEDED(
       encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 4 * frame_rate_));
-   ON_SUCCEEDED(encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, 45));
+  //ON_SUCCEEDED(encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, 45));
+  ON_SUCCEEDED(
+      encodingAttributes->SetUINT32(CODECAPI_AVEncH264CABACEnable, VARIANT_FALSE));
 
   //ON_SUCCEEDED(
   //    encodingAttributes->SetUINT32(CODECAPI_AVEncCommonQuality, 55));
 
-  //const uint64_t i_qp = 26;
-  //const uint64_t p_qp = 26;
-  //const uint64_t b_qp = 26;
-  //const uint64_t encoded_qp = i_qp | (p_qp << 16) | (b_qp << 32);
-
-  //ON_SUCCEEDED(
-      //encodingAttributes->SetUINT32(CODECAPI_AVEncCommonQuality, 0));
   ON_SUCCEEDED(
       sinkWriter_->SetInputMediaType(streamIndex_, mediaTypeIn.Get(), encodingAttributes.Get()));
 
