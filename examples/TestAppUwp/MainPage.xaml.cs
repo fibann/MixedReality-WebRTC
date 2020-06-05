@@ -337,7 +337,7 @@ namespace TestAppUwp
         {
             // Uncomment these lines if you want to connect a HoloLens (or any non-x64 device) to a
             // x64 PC.
-            //var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+            var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
             //if (arch == "AMD64")
             //{
             //    localPeerUidTextBox.Text = "Pc";
@@ -368,7 +368,15 @@ namespace TestAppUwp
             }
             if (localPeerUidTextBox.Text.Length == 0)
             {
-                localPeerUidTextBox.Text = GetDeviceName();
+                if (arch == "AMD64")
+                {
+                    localPeerUidTextBox.Text = "Pc";
+                }
+                else
+                {
+                    localPeerUidTextBox.Text = "Device";
+                }
+                //localPeerUidTextBox.Text = GetDeviceName();
             }
             if (localSettings.Values.TryGetValue("RemotePeerID", out object remoteObj))
             {
@@ -1690,6 +1698,11 @@ namespace TestAppUwp
             {
                 ChatSendButton_Click(this, null);
             }
+        }
+
+        private void h264Profile_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            PeerConnection.SetH264EncodeProfile((PeerConnection.H264Profile)h264Profile.SelectedIndex);
         }
     }
 }
