@@ -262,6 +262,7 @@ namespace TestAppUwp
 
         private void RestoreLocalAndRemotePeerIDs()
         {
+            var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
             if (localSettings.Values.TryGetValue("LocalPeerID", out object localObj))
             {
@@ -272,7 +273,15 @@ namespace TestAppUwp
             }
             if (localPeerUidTextBox.Text.Length == 0)
             {
-                localPeerUidTextBox.Text = GetDeviceName();
+                if (arch == "AMD64")
+                {
+                    localPeerUidTextBox.Text = "Pc";
+                }
+                else
+                {
+                    localPeerUidTextBox.Text = "Device";
+                }
+                //localPeerUidTextBox.Text = GetDeviceName();
             }
             if (localSettings.Values.TryGetValue("RemotePeerID", out object remoteObj))
             {
@@ -1362,6 +1371,11 @@ namespace TestAppUwp
             {
                 ChatSendButton_Click(this, null);
             }
+        }
+
+        private void h264Profile_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            PeerConnection.SetH264EncodeProfile((PeerConnection.H264Profile)h264Profile.SelectedIndex);
         }
     }
 }

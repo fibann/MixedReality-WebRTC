@@ -141,6 +141,16 @@
                             Leave blank to use the default video codec. A partial list is <Hyperlink NavigateUri="https://en.wikipedia.org/wiki/RTP_payload_formats">available from Wikipedia</Hyperlink>.<LineBreak />Common values include "H264", "H265", "VP8", "VP9". Names are case sensitive.
                         </TextBlock>
                         <TextBox x:Name="PreferredVideoCodec" Text="H264" Margin="0,6,0,6" Width="400" HorizontalAlignment="Left" />
+			<StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Margin="16,0,16,0">H.264 encoding profile: </TextBlock>
+                            <ComboBox x:Name="h264Profile" Margin="16,0,0,0" Width="200" SelectedIndex="1" SelectionChanged="h264Profile_SelectionChanged">
+                                <x:String>Constrained Baseline</x:String>
+                                <x:String>Baseline</x:String>
+                                <x:String>Main</x:String>
+                                <x:String>Constrained High</x:String>
+                                <x:String>High</x:String>
+                            </ComboBox>
+                        </StackPanel>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Grid.Column="2">
                         <TextBlock Text="Video profile" FontWeight="Bold" Margin="0,12,0,0" FontFamily="Segoe UI" />
