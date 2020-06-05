@@ -676,6 +676,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             return new LocalVideoTrack(trackHandle, peer, trackName, externalSource);
         }
 
+
         #endregion
     }
 }

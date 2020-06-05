@@ -24,6 +24,11 @@ struct mrsEnumerator {
   virtual void dispose() = 0;
 };
 
+// Defined in
+// external/webrtc-uwp-sdk/webrtc/xplatform/webrtc/third_party/winuwp_h264/H264Encoder/H264Encoder.cc
+extern std::atomic<webrtc::H264::Profile>
+    webrtc__WinUWPH264EncoderImpl__profile;
+
 namespace {
 
 inline bool IsStringNullOrEmpty(const char* str) noexcept {
@@ -1080,6 +1085,20 @@ mrsResult MRS_CALL mrsSdpForceCodecs(const char* message,
 void MRS_CALL mrsSetFrameHeightRoundMode(FrameHeightRoundMode value) {
   PeerConnection::SetFrameHeightRoundMode(
       (PeerConnection::FrameHeightRoundMode)value);
+}
+
+void MRS_CALL mrsSetH264EncodeProfile(mrsH264Profile profile) {
+#define CHECK_ENUM_VALUE(NAME)                                        \
+  static_assert((int)webrtc::H264::NAME == (int)mrsH264Profile::NAME, \
+                "webrtc::H264::Profile does not match mrsH264Profile")
+  CHECK_ENUM_VALUE(kProfileConstrainedBaseline);
+  CHECK_ENUM_VALUE(kProfileBaseline);
+  CHECK_ENUM_VALUE(kProfileMain);
+  CHECK_ENUM_VALUE(kProfileConstrainedHigh);
+  CHECK_ENUM_VALUE(kProfileHigh);
+#undef CHECK_ENUM_VALUE
+
+  webrtc__WinUWPH264EncoderImpl__profile.store((webrtc::H264::Profile)profile);
 }
 
 void MRS_CALL mrsMemCpy(void* dst, const void* src, uint64_t size) noexcept {

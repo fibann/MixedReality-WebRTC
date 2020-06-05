@@ -1981,6 +1981,27 @@ namespace Microsoft.MixedReality.WebRTC
             Utils.SetFrameHeightRoundMode(value);
         }
 
+        public enum H264Profile
+        {
+            ConstrainedBaseline,
+            Baseline,
+            Main,
+            ConstrainedHigh,
+            High
+        }
+
+        /// <summary>
+        /// Set the profile used by the H.264 encoder.
+        /// </summary>
+        /// <remarks>
+        /// The passed value will apply to all tracks that start streaming, from any peer connection
+        /// created by the application, after the call to this function.
+        /// </remarks>
+        public static void SetH264EncodeProfile(H264Profile profile)
+        {
+            Utils.SetH264EncodeProfile(profile);
+        }
+
         internal void OnConnected()
         {
             MainEventSource.Log.Connected();
