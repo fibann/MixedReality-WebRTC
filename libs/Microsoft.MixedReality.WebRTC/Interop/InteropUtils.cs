@@ -154,11 +154,11 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             }
         }
 
-        /// <summary>
-        /// See <see cref="PeerConnection.SetFrameHeightRoundMode(PeerConnection.FrameHeightRoundMode)"/>.
-        /// </summary>
-        /// <param name="value"></param>
         [DllImport(dllPath, CallingConvention = CallingConvention.StdCall, EntryPoint = "mrsSetFrameHeightRoundMode")]
-        public static unsafe extern void SetFrameHeightRoundMode(PeerConnection.FrameHeightRoundMode value);
+        internal static unsafe extern void SetFrameHeightRoundMode(PeerConnection.FrameHeightRoundMode value);
+
+        [DllImport(dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsSetH264EncodeProfile")]
+        internal static extern void SetH264EncodeProfile(PeerConnection.H264Profile profile);
     }
 }

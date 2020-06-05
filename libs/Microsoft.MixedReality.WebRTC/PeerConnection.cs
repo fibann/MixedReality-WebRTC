@@ -882,7 +882,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// On UWP this requires the "webcam" capability.
         /// See <see href="https://docs.microsoft.com/en-us/windows/uwp/packaging/app-capability-declarations"/>
         /// for more details.
-        /// 
+        ///
         /// <see cref="PeerConnection"/> supports a single local audio track and a single local video track.
         /// In order to send/receive multiple tracks to/from a given remote device, developers need to use multiple
         /// <see cref="PeerConnection"/> instances.
@@ -953,7 +953,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// On UWP this requires the "microphone" capability.
         /// See <see href="https://docs.microsoft.com/en-us/windows/uwp/packaging/app-capability-declarations"/>
         /// for more details.
-        /// 
+        ///
         /// <see cref="PeerConnection"/> supports a single local audio track and a single local video track.
         /// In order to send/receive multiple tracks to/from a given remote device, developers need to use multiple
         /// <see cref="PeerConnection"/> instances.
@@ -1347,6 +1347,27 @@ namespace Microsoft.MixedReality.WebRTC
         public static void SetFrameHeightRoundMode(FrameHeightRoundMode value)
         {
             Utils.SetFrameHeightRoundMode(value);
+        }
+
+        public enum H264Profile
+        {
+            ConstrainedBaseline,
+            Baseline,
+            Main,
+            ConstrainedHigh,
+            High
+        }
+
+        /// <summary>
+        /// Set the profile used by the H.264 encoder.
+        /// </summary>
+        /// <remarks>
+        /// The passed value will apply to all tracks that start streaming, from any peer connection
+        /// created by the application, after the call to this function.
+        /// </remarks>
+        public static void SetH264EncodeProfile(H264Profile profile)
+        {
+            Utils.SetH264EncodeProfile(profile);
         }
 
         internal void OnConnected()

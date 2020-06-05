@@ -687,6 +687,20 @@ enum class FrameHeightRoundMode : int32_t { NONE = 0, CROP = 1, PAD = 2};
 MRS_API void MRS_CALL
 mrsSetFrameHeightRoundMode(FrameHeightRoundMode value);
 
+enum class mrsH264Profile : int32_t {
+  kProfileConstrainedBaseline,
+  kProfileBaseline,
+  kProfileMain,
+  kProfileConstrainedHigh,
+  kProfileHigh,
+};
+
+/// Set the profile used by the H.264 encoder.
+///
+/// The passed value will apply to all tracks that start streaming, from any peer connection
+/// created by the application, after the call to this function.
+MRS_API void MRS_CALL mrsSetH264EncodeProfile(mrsH264Profile profile);
+
 //
 // Generic utilities
 //

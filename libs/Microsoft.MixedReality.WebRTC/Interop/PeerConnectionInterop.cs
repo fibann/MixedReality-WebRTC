@@ -599,6 +599,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             EntryPoint = "mrsPeerConnectionClose")]
         public static extern void PeerConnection_Close(ref IntPtr peerHandle);
 
+
         #endregion
     }
 }
