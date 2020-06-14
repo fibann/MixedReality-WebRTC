@@ -11,8 +11,17 @@ void DoEncode(std::ifstream& uncompressed_file,
               int width,
               int height,
     int framerate,
-    int bitrate, int num_frames = 100);
-void StripHeaders(std::istream& file, std::ostream& out, int num_frames = 100);
+              int bitrate,
+              int num_frames = INT_MAX,
+              int start_frame = 0);
+void StripHeaders(std::istream& file,
+                  std::ostream& out,
+                  int num_frames = INT_MAX,
+                  int start_frame = 0);
+void Trim(std::istream& file,
+                  std::ostream& out,
+                  int num_frames = INT_MAX,
+                  int start_frame = 0);
 void RemoveMissingFrames(std::istream& uncompressed,
                          std::istream& compressed,
                          std::ostream& out,
@@ -29,12 +38,12 @@ int main(int argc, char* argv[]) {
 
   //StripHeaders(compressed_file, out);
 
-  if (argc != 7) {
-    std::cout
-        << "Usage: Encode-Console <width> <height> <fps> <target_bitrate_kbps> <input_file> <output_file>"
-        << std::endl;
-    return 1;
-  }
+  //if (argc != 7) {
+  //  std::cout
+  //      << "Usage: Encode-Console <width> <height> <fps> <target_bitrate_kbps> <input_file> <output_file>"
+  //      << std::endl;
+  //  return 1;
+  //}
 
    //int width = std::atoi(argv[1]);
    //int heigth = std::atoi(argv[2]);
@@ -47,23 +56,16 @@ int main(int argc, char* argv[]) {
    int heigth = 720;
    int frame_rate = 30;
    int bitrate = 1000;
-   const char* input_file =
-       R"(C:\Users\fiban\Downloads\capture_2020-01-17\uncompressed_HL2_1280x720-30.dat)";
-   //R"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed_HL2_1280x720-30-1000-vbr-gop4.dat)";
-   //R"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed_HL1_1280x720-30-1000-gop4.dat)";
-   const char* output_file =
-       //R"(C:\Users\fiban\Downloads\capture_2020-01-17\uncompressed.raw)";
-       //R"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed_HL2.h264)";
-   R"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed_HL2-cbr-maxQP45.dat)";
-   // R"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed_HL1.h264)";
-   const char* unc_stripped =
-       R"(C:\Users\fiban\Downloads\capture_2020-01-17\uncompressed_stripped.dat)";
-   const char* unc_raw =
-       R"(C:\Users\fiban\Downloads\capture_2020-01-17\uncompressed_stripped.raw)";
+
+   const char* dir =
+       R"(C:\Users\fiban\Downloads\capture_2020-06-10\)";
 
 
-   const char* compr_raw =
-       R"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed_HL2-cbr-maxQP45.h264)";
+   const char* input_file_name = "uncompressed_complex";
+   const char* output_file_name = "compressed_complex-high-maxQP45";
+
+   auto input_file = std::string(dir) + input_file_name + ".dat";
+   auto output_file = std::string(dir) + output_file_name + ".dat";
 
   if (width <= 0 || heigth <= 0) {
     std::cout << "Invalid res: " << width << "," << heigth << std::endl;
@@ -79,39 +81,53 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  {
-    //std::ifstream uncompressed_file(input_file, std::ios_base::binary);
-    //if (!uncompressed_file.good()) {
-    //  std::cout << "Invalid input: " << input_file << std::endl;
-    //  return 1;
-    //}
-    //std::ofstream compressed_file(output_file, std::ios_base::binary);
-    //if (!compressed_file.good()) {
-    //  std::cout << "Invalid output: " << output_file << std::endl;
-    //  return 1;
-    //}
+  //{
+  //  std::ifstream uncompressed_file(input_file, std::ios_base::binary);
+  //  if (!uncompressed_file.good()) {
+  //    std::cout << "Invalid input: " << input_file << std::endl;
+  //    return 1;
+  //  }
+  //  std::ofstream compressed_file(output_file, std::ios_base::binary);
+  //  if (!compressed_file.good()) {
+  //    std::cout << "Invalid output: " << output_file << std::endl;
+  //    return 1;
+  //  }
 
-    //DoEncode(uncompressed_file, compressed_file, width, heigth, frame_rate, bitrate, INT_MAX);
-    //StripHeaders(uncompressed_file, compressed_file, 500);
-  }
+  //  DoEncode(uncompressed_file, compressed_file, width, heigth, frame_rate,
+  //           bitrate, INT_MAX);
+  //}
 
   std::ifstream uncompressed_file(input_file, std::ios_base::binary);
   std::ifstream compressed_file(output_file, std::ios_base::binary);
-  {
-    std::ofstream stripped_file(unc_stripped, std::ios_base::binary);
-    RemoveMissingFrames(uncompressed_file, compressed_file, stripped_file,
-                        INT_MAX);
+   if (!uncompressed_file.good()) {
+    std::cout << "Invalid input: " << input_file << std::endl;
+    return 1;
   }
-  std::ifstream stripped_file(unc_stripped, std::ios_base::binary);
+   if (!compressed_file.good()) {
+    std::cout << "Invalid output: " << output_file << std::endl;
+    return 1;
+  }
+
+  //{
+  //  std::ofstream stripped_file(unc_stripped, std::ios_base::binary);
+  //  RemoveMissingFrames(uncompressed_file, compressed_file, stripped_file,
+  //                      INT_MAX);
+  //}
+
+   //auto unc_raw = std::string(dir) + input_file_name + ".raw";
+  auto unc_raw = std::string(dir) + input_file_name + "_trim.dat";
+  std::ifstream stripped_file(input_file, std::ios_base::binary);
   std::ofstream raw_file(unc_raw, std::ios_base::binary);
-  StripHeaders(stripped_file, raw_file, 500);
+  Trim(stripped_file, raw_file, 720 - 180, 180);
+
+   //auto compr_raw = std::string(dir) + output_file_name + ".h264";
+  auto compr_raw = std::string(dir) + output_file_name + "_trim.dat";
   std::ifstream cfile(output_file, std::ios_base::binary);
   std::ofstream crawfile(compr_raw, std::ios_base::binary);
-  StripHeaders(cfile, crawfile, 500);
+  Trim(cfile, crawfile, 720 - 180, 180);
 
-  //int frame_size = width * heigth * 3 / 2;
+  int frame_size = width * heigth * 3 / 2;
 
   //ReadFile(uncompressed_file, frame_size, INT_MAX);
   //ReadFile(compressed_file, frame_size, INT_MAX);
-  //ReadFile(oth_file, frame_size, INT_MAX);
 }

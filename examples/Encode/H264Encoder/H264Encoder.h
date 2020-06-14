@@ -32,6 +32,17 @@ int64_t TimeMillis();
 }
 
 namespace webrtc {
+namespace H264 {
+
+enum Profile {
+  kProfileConstrainedBaseline,
+  kProfileBaseline,
+  kProfileMain,
+  kProfileConstrainedHigh,
+  kProfileHigh,
+};
+
+}  // namespace H264
 
 	class VideoFrame {
  public:
@@ -104,7 +115,7 @@ namespace webrtc {
 
 class H264MediaSink;
 
-using EncodedImageCallback = std::function<void(const uint8_t*, int64_t, int32_t)>;
+using EncodedImageCallback = std::function<void(const uint8_t*, int64_t, int32_t, bool)>;
 
 class WinUWPH264EncoderImpl : public IH264EncodingCallback {
  public:
@@ -213,6 +224,8 @@ class WinUWPH264EncoderImpl : public IH264EncodingCallback {
   RateWindow bitrate_window_;
   RateWindow framerate_window_;
   int64_t last_stats_time_;
+  int max_qp_;
+  H264::Profile profile_;
 };  // end of WinUWPH264EncoderImpl class
 
 }  // namespace webrtc

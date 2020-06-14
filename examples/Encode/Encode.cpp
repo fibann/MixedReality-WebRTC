@@ -56,22 +56,22 @@ void ReadFile(std::ifstream& file, int frame_size, int num_frames = 100) {
     auto actualSpaceBetweenFrames = delivery_ts - last_delivery_timestamp;
     last_delivery_timestamp = delivery_ts;
     last_frame_timestamp = timestampHns;
-    //sprintf(log, "%d TS %lld ATS %d D %lld AD %lld SBF %d S %d\n", i++, timestampHns / 10'000, delivery_ts, durationHns / 10'000,
+    //sprintf(log, "%d TS %lld ATS %d D %lld AD %lld SBF %d S %d\n", i, timestampHns / 10'000, delivery_ts, durationHns / 10'000,
     //        actualDurationHns / 10'000, actualSpaceBetweenFrames, totalSize);
-    sprintf(log, "%d Timestamp %lld Duration %lld Size %d\n", i++,
+    sprintf(log, "%d Timestamp %lld Duration %lld Size %d\n", i,
             timestampHns / 10'000, durationHns / 10'000, totalSize);
     bits += totalSize * 8;
     OutputDebugStringA(log);
+    ++i;
   }
 
   sprintf(log, "Total %f fps %f kbps\n",
           ((float)i) / (last_frame_timestamp / 10'000'000),
           bits / 1000.0f / (last_frame_timestamp / 10'000'000));
   OutputDebugStringA(log);
-  ++i;
 }
 
-void StripHeaders(std::istream& file, std::ostream& out, int num_frames = 100) {
+void StripHeaders(std::istream& file, std::ostream& out, int num_frames, int start_frame) {
   std::vector<char> buffer;
 
   int i = 0;
@@ -92,7 +92,45 @@ void StripHeaders(std::istream& file, std::ostream& out, int num_frames = 100) {
     file.read((char*)&totalSize, sizeof(totalSize));
     buffer.resize(std::max((int)buffer.size(), totalSize));
     file.read(buffer.data(), totalSize);
-    out.write(buffer.data(), totalSize);
+
+    if (i >= start_frame) {
+      out.write(buffer.data(), totalSize);
+    }
+    ++i;
+  }
+}
+
+void Trim(std::istream& file,
+                  std::ostream& out,
+                  int num_frames,
+                  int start_frame) {
+  std::vector<char> buffer;
+
+  int i = 0;
+  LONGLONG last_frame_timestamp = 0;
+  int last_delivery_timestamp = 0;
+  int64_t last_second = 0;
+  int frames_at_last_second = 0;
+  int bits_at_last_second = 0;
+  int bits = 0;
+  char log[1024];
+  while (i < num_frames && !file.eof()) {
+    int64_t timestampHns, durationHns;
+    int32_t totalSize, delivery_ts{};
+
+    file.read((char*)&timestampHns, sizeof(timestampHns));
+    file.read((char*)&durationHns, sizeof(durationHns));
+    // file.read((char*)&delivery_ts, sizeof(delivery_ts));
+    file.read((char*)&totalSize, sizeof(totalSize));
+    buffer.resize(std::max((int)buffer.size(), totalSize));
+    file.read(buffer.data(), totalSize);
+
+    if (i >= start_frame) {
+      out.write((char*)&timestampHns, sizeof(timestampHns));
+      out.write((char*)&durationHns, sizeof(durationHns));
+      out.write((char*)&totalSize, sizeof(totalSize));
+      out.write(buffer.data(), totalSize);
+    }
     ++i;
   }
 }
@@ -156,8 +194,7 @@ void DoEncode(std::ifstream& uncompressed_file,
               int width,
               int height,
               int framerate,
-    int bitrate,
-    int num_frames = 100) {
+    int bitrate) {
   webrtc::VideoCodec codec;
   codec.width = width;
   codec.height = height;
@@ -178,8 +215,9 @@ void DoEncode(std::ifstream& uncompressed_file,
 
     std::atomic<bool> arrived = false;
 
+    int i = 0;
     webrtc::EncodedImageCallback cb = [&](const uint8_t* byteBuffer, int64_t sampleTimestamp,
-                                  int32_t curLength) {
+                                  int32_t curLength, bool keyframe) {
        LONGLONG zero = 0;
       if (curLength) {
         // if (first_decoded_ts < 0) {
@@ -191,14 +229,19 @@ void DoEncode(std::ifstream& uncompressed_file,
         // compressed_file.write((char*)&now_delta, sizeof(now_delta));
         compressed_file.write((char*)&curLength, sizeof(curLength));
         compressed_file.write((char*)byteBuffer, curLength);
+
+        if (keyframe) {
+          std::stringstream str;
+          str << i << " is a keyframe " << std::endl;
+          OutputDebugStringA(str.str().c_str());
+        }
       }
       arrived.store(true, std::memory_order::memory_order_release);
     };
     encoder->RegisterEncodeCompleteCallback(&cb);
-    int i = 0;
     char log[1024];
     int64_t first_delivery_ts = -1;
-    while (i < num_frames && !uncompressed_file.eof()) {
+    while (!uncompressed_file.eof()) {
       int64_t timestampHns, durationHns;
       int32_t totalSize;
       int32_t delivery_ts;
@@ -228,14 +271,14 @@ void DoEncode(std::ifstream& uncompressed_file,
         first_delivery_ts = now;
       }
 
-      //auto now_delta = now - first_delivery_ts;
-      //time_to_sleep = max(0, delivery_ts - now_delta);
-      //auto now_delta = now - begin_timestamp;
-      //time_to_sleep = max(0, timestampHns / 10'000 - now_delta);
-      //if (time_to_sleep) {
+      // auto now_delta = now - first_delivery_ts;
+      // time_to_sleep = max(0, delivery_ts - now_delta);
+      // auto now_delta = now - begin_timestamp;
+      // time_to_sleep = max(0, timestampHns / 10'000 - now_delta);
+      // if (time_to_sleep) {
       //  Sleep(time_to_sleep);
       //}
-      //Sleep(33);
+      // Sleep(33);
 
       last_timestamp = now;
       last_frame_timestamp = timestampHns;
@@ -246,6 +289,7 @@ void DoEncode(std::ifstream& uncompressed_file,
         Sleep(33);
       }
       arrived.store(false, std::memory_order_relaxed);
+      ++i;
     }
   }
 }

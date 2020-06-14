@@ -36,13 +36,15 @@ void DoEncode(std::ifstream& uncompressed_file,
               int width,
               int height,
               int framerate,
-              int bitrate,
-              int num_frames = 100);
-void StripHeaders(std::istream& file, std::ostream& out, int num_frames = 100);
+              int bitrate);
+void StripHeaders(std::istream& file,
+                  std::ostream& out,
+                  int num_frames = INT_MAX,
+                  int start_frame = 0);
 void RemoveMissingFrames(std::istream& uncompressed,
                          std::istream& compressed,
                          std::ostream& out,
-                         int num_frames = 100);
+                         int num_frames = INT_MAX);
 
 
   const int WIDTH = 1280;
@@ -53,8 +55,8 @@ int frame_size = WIDTH * HEIGHT * 3 / 2;
 MainPage::MainPage() {
   InitializeComponent();
 
-  const auto uncompressed = "uncompressed_full";
-  const auto compressed = "compressed_HL2-vbr-maxQP45-1600";
+  const auto uncompressed = "uncompressed_complex";
+  const auto compressed = "compressed_complex-high-maxQP45";
 
   auto current = Windows::Storage::ApplicationData::Current;
   auto ppath = current->LocalFolder->Path;
@@ -70,30 +72,24 @@ MainPage::MainPage() {
         (folderNameA + "\\" + compressed + ".dat").c_str(),
         std::ios_base::binary);
 
-    DoEncode(uncompressed_file, compressed_file, WIDTH, HEIGHT, 30, 1600,
-             INT_MAX);
+    DoEncode(uncompressed_file, compressed_file, WIDTH, HEIGHT, 30, 1000);
   }
-  {
-    std::ifstream compressed_file(
-        (folderNameA + "\\" + compressed + ".dat").c_str(),
-        std::ios_base::binary);
-    std::ofstream no_headers(
-        (folderNameA + "\\" + compressed + ".h264").c_str(),
-        std::ios_base::binary);
+  //{
+  //  std::ifstream compressed_file(
+  //      (folderNameA + "\\" + compressed + ".dat").c_str(),
+  //      std::ios_base::binary);
+  //  std::ofstream no_headers(
+  //      (folderNameA + "\\" + compressed + ".h264").c_str(),
+  //      std::ios_base::binary);
 
-    StripHeaders(compressed_file, no_headers, 500);
-  }
+  //  StripHeaders(compressed_file, no_headers, INT_MAX);
+  //}
 
   //std::ifstream uncompressed_file(
-  //    (folderNameA + "\\capture_2020-04-24\\uncompressed.dat").c_str(),
+  //    (folderNameA + "\\" + uncompressed + ".dat").c_str(),
   //    std::ios_base::binary);
   //std::ifstream compressed_file(
-  //    (folderNameA + "\\capture_2020-04-24\\compressed.dat").c_str(),
-  //    std::ios_base::binary);
-  //std::ifstream uncompressed_file(
-  //    (folderNameA + "\\uncompressed_full.dat").c_str(), std::ios_base::binary);
-  //std::ifstream compressed_file(
-  //    (folderNameA + "\\compressed_HL2_1280x720-30-1000-vbr-gop4.dat").c_str(),
+  //    (folderNameA + "\\" + compressed + ".dat").c_str(),
   //    std::ios_base::binary);
   //ReadFile(uncompressed_file, frame_size, INT_MAX);
   //ReadFile(compressed_file, frame_size, INT_MAX);

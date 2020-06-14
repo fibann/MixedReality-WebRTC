@@ -182,8 +182,10 @@ bool webrtc__WinUWPH264EncoderImpl__add_padding = false;
 namespace webrtc {
 
 // QP scaling thresholds.
-static const int kLowH264QpThreshold = 24;
-static const int kHighH264QpThreshold = 37;
+static constexpr int kLowH264QpThreshold = 24;
+static constexpr int kHighH264QpThreshold = 37;
+
+static constexpr unsigned kMaxH264Qp = 51;
 
 // On some encoders (e.g. Hololens) changing rates is slow and will cause
 // visible stuttering, so we don't want to do it too often.
@@ -191,8 +193,8 @@ static const int kHighH264QpThreshold = 37;
 // end up being off the requested value by a small amount in the long term. We
 // should not ignore small variations but possibly use a longer min interval so
 // they are eventually applied.
-static const int kMinIntervalBetweenRateChangesMs = 0;
-static const float kMinRateVariation = 0.1f;
+static constexpr int kMinIntervalBetweenRateChangesMs = 5000;
+static constexpr float kMinRateVariation = 0.1f;
 
 //////////////////////////////////////////
 // H264 WinUWP Encoder Implementation
@@ -200,10 +202,14 @@ static const float kMinRateVariation = 0.1f;
 
 WinUWPH264EncoderImpl::WinUWPH264EncoderImpl()
 {
+  HRESULT hr = S_OK;
+  ON_SUCCEEDED(MFStartup(MF_VERSION));
 }
 
 WinUWPH264EncoderImpl::~WinUWPH264EncoderImpl() {
   Release();
+  HRESULT hr = S_OK;
+  ON_SUCCEEDED(MFShutdown());
 }
 
 namespace {
@@ -291,6 +297,8 @@ int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
   // the desired frame rate too.
   frame_rate_ = codec_settings->maxFramerate;
 
+  max_qp_ = 45;
+  //std::min(51, kMaxH264Qp);
 
   //frame_dropping_on_ = codec_settings->H264().frameDroppingOn;
   //key_frame_interval_ = codec_settings->H264().keyFrameInterval;
@@ -308,9 +316,11 @@ int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
     target_bps_ = width_ * height_ * 2;
   }
 
+  // Initialize the profile for the track encoded by this object.
+  profile_ = H264::kProfileHigh;
+
   // Configure the encoder.
   HRESULT hr = S_OK;
-  ON_SUCCEEDED(MFStartup(MF_VERSION));
 
   ON_SUCCEEDED(InitWriter());
 
@@ -340,14 +350,42 @@ int WinUWPH264EncoderImpl::InitWriter() {
   ON_SUCCEEDED(MFCreateMediaType(&mediaTypeOut));
   ON_SUCCEEDED(mediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video));
   ON_SUCCEEDED(mediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264));
-  ON_SUCCEEDED(mediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, eAVEncH264VProfile_Main));
+
+  eAVEncH264VProfile mf_profile;
+  switch (profile_) {
+    case H264::kProfileConstrainedBaseline:
+      mf_profile = eAVEncH264VProfile_ConstrainedBase;
+      //RTC_LOG_F(LS_INFO) << "Using Constrained Baseline profile";
+      break;
+    case H264::kProfileBaseline:
+      mf_profile = eAVEncH264VProfile_Base;
+      //RTC_LOG_F(LS_INFO) << "Using Baseline profile";
+      break;
+    case H264::kProfileMain:
+      mf_profile = eAVEncH264VProfile_Main;
+      //RTC_LOG_F(LS_INFO) << "Using Main profile";
+      break;
+    case H264::kProfileConstrainedHigh:
+      mf_profile = eAVEncH264VProfile_ConstrainedHigh;
+      //RTC_LOG_F(LS_INFO) << "Using Constrained High profile";
+      break;
+    case H264::kProfileHigh:
+      mf_profile = eAVEncH264VProfile_High;
+      //RTC_LOG_F(LS_INFO) << "Using High profile";
+      break;
+    default:
+      return -1;
+      break;
+  }
+  ON_SUCCEEDED(mediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, mf_profile));
+
 
   ON_SUCCEEDED(mediaTypeOut->SetUINT32(
     MF_MT_AVG_BITRATE, target_bps_));
   ON_SUCCEEDED(mediaTypeOut->SetUINT32(
     MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive));
-  ON_SUCCEEDED(MFSetAttributeSize(mediaTypeOut.Get(),
-    MF_MT_FRAME_SIZE, width_, encoded_height_));
+  ON_SUCCEEDED(MFSetAttributeSize(mediaTypeOut.Get(), MF_MT_FRAME_SIZE, width_,
+                                  encoded_height_));
   ON_SUCCEEDED(MFSetAttributeRatio(mediaTypeOut.Get(), MF_MT_FRAME_RATE,
                                    frame_rate_, 1));
 
@@ -381,33 +419,27 @@ int WinUWPH264EncoderImpl::InitWriter() {
   // Create the sink writer
   ON_SUCCEEDED(MFCreateSinkWriterFromMediaSink(mediaSink_.Get(),
     sinkWriterCreationAttributes.Get(), &sinkWriter_));
-  //MFCreateSinkWriterFromURL(
-  //    LR"(C:\Users\fiban\Downloads\capture_2020-01-17\compressed.mp4)", nullptr,
-  //    sinkWriterCreationAttributes.Get(), &sinkWriter_);
 
   // Add the h264 output stream to the writer
   ON_SUCCEEDED(sinkWriter_->AddStream(mediaTypeOut.Get(), &streamIndex_));
 
-  // Register this as the callback for encoded samples.
-  ON_SUCCEEDED(mediaSink_->RegisterEncodingCallback(this));
-
   // SinkWriter encoder properties
   ComPtr<IMFAttributes> encodingAttributes;
-  ON_SUCCEEDED(MFCreateAttributes(&encodingAttributes, 3));
-  //ON_SUCCEEDED(encodingAttributes->SetUINT32(
-  //    CODECAPI_AVEncCommonRateControlMode,
-  //    eAVEncCommonRateControlMode_UnconstrainedVBR));
+  ON_SUCCEEDED(MFCreateAttributes(&encodingAttributes, 1));
   ON_SUCCEEDED(
-      encodingAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, 4 * frame_rate_));
-  //ON_SUCCEEDED(encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, 45));
-  ON_SUCCEEDED(
-      encodingAttributes->SetUINT32(CODECAPI_AVEncH264CABACEnable, VARIANT_FALSE));
+      encodingAttributes->SetUINT32(CODECAPI_AVEncH264CABACEnable, VARIANT_TRUE));
 
-  //ON_SUCCEEDED(
-  //    encodingAttributes->SetUINT32(CODECAPI_AVEncCommonQuality, 55));
+  // kMaxH264Qp is the default.
+  if (max_qp_ < kMaxH264Qp) {
+    //RTC_LOG(LS_INFO) << "Set max QP to " << max_qp_;
+    ON_SUCCEEDED(
+        encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, max_qp_));
+  }
+  ON_SUCCEEDED(sinkWriter_->SetInputMediaType(streamIndex_, mediaTypeIn.Get(),
+                                              encodingAttributes.Get()));
 
-  ON_SUCCEEDED(
-      sinkWriter_->SetInputMediaType(streamIndex_, mediaTypeIn.Get(), encodingAttributes.Get()));
+  // Register this as the callback for encoded samples.
+  ON_SUCCEEDED(mediaSink_->RegisterEncodingCallback(this));
 
   ON_SUCCEEDED(sinkWriter_->BeginWriting());
 
@@ -459,8 +491,7 @@ int WinUWPH264EncoderImpl::ReleaseWriter() {
 
 int WinUWPH264EncoderImpl::Release() {
   ReleaseWriter();
-  HRESULT hr = S_OK;
-  ON_SUCCEEDED(MFShutdown());
+
   return 0;
 }
 
@@ -774,7 +805,7 @@ void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
       debugLog << "WARNING Got empty sample.\n";
       buffer->Unlock();
       (*encodedCompleteCallback_)(nullptr, sampleTimestamp,
-                                  0);
+                                  0, false);
       return;
     } else {
       sendBuffer.resize(curLength);
@@ -852,7 +883,7 @@ void WinUWPH264EncoderImpl::OnH264Encoded(ComPtr<IMFSample> sample) {
 
 	  if (encodedCompleteCallback_ != nullptr) {
         (*encodedCompleteCallback_)(sendBuffer.data(),
-                                                 sampleTimestamp, curLength);
+                                                 sampleTimestamp, curLength, keyframe);
       }
     }
   }
