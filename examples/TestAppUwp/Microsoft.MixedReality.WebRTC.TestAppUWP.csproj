@@ -25,10 +25,10 @@
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
     <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>arm</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x86|arm</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     <PackageCertificateThumbprint>12D466D80A6172FF1A6BF0E3DBDAFBE1676B9F48</PackageCertificateThumbprint>
-    <AppxPackageDir>E:\repos\MixedReality-WebRTC\examples\TestAppUwp\AppPackages\Debug\</AppxPackageDir>
+    <AppxPackageDir>E:\repos\MixedReality-WebRTC\AppPackages\TestAppUWP\</AppxPackageDir>
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>

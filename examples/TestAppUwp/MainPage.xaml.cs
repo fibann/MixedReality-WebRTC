@@ -329,8 +329,9 @@ namespace TestAppUwp
 
         private static bool IsFirstInstance()
         {
-            var firstInstance = AppInstance.FindOrRegisterInstanceForKey("{44CD414E-B604-482E-8CFD-A9E09076CABD}");
-            return firstInstance.IsCurrentInstance;
+            return true;
+            //var firstInstance = AppInstance.FindOrRegisterInstanceForKey("{44CD414E-B604-482E-8CFD-A9E09076CABD}");
+            //return firstInstance.IsCurrentInstance;
         }
 
         private void RestoreParams()
@@ -678,11 +679,11 @@ namespace TestAppUwp
             localVideo.SetMediaPlayer(localVideoPlayer);
             remoteVideo.SetMediaPlayer(remoteVideoPlayer);
 
-            if (HolographicSpace.IsAvailable)
-            {
-                VideoProfileComboBox.SelectedIndex = -1;
-                StartLocalMediaClicked(this, new RoutedEventArgs());
-            }
+            //if (HolographicSpace.IsAvailable)
+            //{
+            //    VideoProfileComboBox.SelectedIndex = -1;
+            //    StartLocalMediaClicked(this, new RoutedEventArgs());
+            //}
         }
 
         private void PreferredAudioCodecChecked(object sender, RoutedEventArgs args)
