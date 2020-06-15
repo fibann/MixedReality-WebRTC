@@ -133,4 +133,7 @@
   <ItemGroup>
     <Page Include="MainPage.xaml" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Encode_TemporaryKey.pfx" />
+  </ItemGroup>
 </Project>

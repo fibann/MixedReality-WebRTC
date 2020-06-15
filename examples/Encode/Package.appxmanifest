@@ -9,7 +9,7 @@
   <Identity
     Name="54e1e60e-7674-454d-9630-4c0dcd926ceb"
     Publisher="CN=fiban"
-    Version="1.0.0.0" />
+    Version="0.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="54e1e60e-7674-454d-9630-4c0dcd926ceb" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
