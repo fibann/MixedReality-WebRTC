@@ -97,11 +97,11 @@ void MainPage::Button_Click(Platform::Object ^ sender,
   auto p = (webrtc::H264::Profile)profile->SelectedIndex;
 
   int qp = ToInt(max_qp, L"MaxQP", log);
-  if (qp <= 0) {
+  if (qp < 26 || qp > 51) {
     return;
   }
   int q = ToInt(quality, L"quality", log);
-  if (q <= 0) {
+  if (q < -1 || q > 100) {
     return;
   }
 
