@@ -2141,5 +2141,15 @@ namespace Microsoft.MixedReality.WebRTC
             MainEventSource.Log.RemoteAudioFrameReady(frame.bitsPerSample, frame.channelCount, frame.sampleCount);
             RemoteAudioFrameReady?.Invoke(frame);
         }
+
+        [DllImport(Interop.Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsSetExtraParams")]
+        public static extern void SetExtraParams(int maxQp, int quality, mrsBool record);
+
+        public static void SetExtraParams(int maxQp, int quality, bool record)
+        {
+            SetExtraParams(maxQp, quality, (mrsBool)record);
+        }
+
     }
 }

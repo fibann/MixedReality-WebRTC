@@ -1481,7 +1481,8 @@ namespace TestAppUwp
 
                 // The default start bitrate is quite low (300 kbps); use a higher value to get
                 // better quality on local network.
-                _peerConnection.SetBitrate(startBitrateBps: 1000000, maxBitrateBps: 1000000);
+                uint br = uint.Parse(_bitrate.Text) * 1000;
+                _peerConnection.SetBitrate(startBitrateBps: br, maxBitrateBps: br, minBitrateBps: br);
 
                 try
                 {
@@ -1703,6 +1704,49 @@ namespace TestAppUwp
         private void h264Profile_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             PeerConnection.SetH264EncodeProfile((PeerConnection.H264Profile)h264Profile.SelectedIndex);
+        }
+
+        private bool ParseParams(out int maxQp, out int qual)
+        {
+            _invalidParams.Text = "";
+            try
+            {
+                maxQp = int.Parse(max_qp.Text);
+                qual = int.Parse(quality.Text);
+                uint.Parse(_bitrate.Text);
+                if (!(maxQp >= 26 && maxQp <= 51 && qual >= -1 && qual <= 100))
+                    throw new Exception();
+                return true;
+            }
+            catch (Exception _)
+            {
+                _invalidParams.Text = "Invalid params!";
+                maxQp = qual = -1;
+                return false;
+            }
+        }
+
+        private void max_qp_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (ParseParams(out int maxQp, out int qual))
+                PeerConnection.SetExtraParams(maxQp, qual, record.IsChecked.Value);
+        }
+
+        private void quality_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (ParseParams(out int maxQp, out int qual))
+                PeerConnection.SetExtraParams(maxQp, qual, record.IsChecked.Value);
+        }
+
+        private void record_Checked(object sender, RoutedEventArgs e)
+        {
+            if (ParseParams(out int maxQp, out int qual))
+                PeerConnection.SetExtraParams(maxQp, qual, record.IsChecked.Value);
+        }
+
+        private void _bitrate_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ParseParams(out int _, out int _);
         }
     }
 }

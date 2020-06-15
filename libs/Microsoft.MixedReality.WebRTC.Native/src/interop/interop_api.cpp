@@ -1100,6 +1100,18 @@ void MRS_CALL mrsSetH264EncodeProfile(mrsH264Profile profile) {
 
   webrtc__WinUWPH264EncoderImpl__profile.store((webrtc::H264::Profile)profile);
 }
+extern int webrtc__WinUWPH264EncoderImpl__maxQp;
+extern int webrtc__WinUWPH264EncoderImpl__quality;
+extern int webrtc__WinUWPH264EncoderImpl__record;
+
+extern "C" {
+__declspec(dllexport) void MRS_CALL
+    mrsSetExtraParams(int maxQp, int quality, mrsBool record) {
+  webrtc__WinUWPH264EncoderImpl__maxQp = maxQp;
+  webrtc__WinUWPH264EncoderImpl__quality = quality;
+  webrtc__WinUWPH264EncoderImpl__record = (record == mrsBool::kTrue);
+}
+}
 
 void MRS_CALL mrsMemCpy(void* dst, const void* src, uint64_t size) noexcept {
   memcpy(dst, src, static_cast<size_t>(size));

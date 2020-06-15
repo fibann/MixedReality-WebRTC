@@ -12,7 +12,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
     /// Interop boolean.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Size = 4)]
-    internal struct mrsBool
+    public struct mrsBool
     {
         public static readonly mrsBool True = new mrsBool(true);
         public static readonly mrsBool False = new mrsBool(false);
