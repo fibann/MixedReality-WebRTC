@@ -36,8 +36,11 @@ void DoEncode(std::ifstream& uncompressed_file,
               int width,
               int height,
               int framerate,
-              int bitrate);
-void StripHeaders(std::istream& file,
+              int bitrate,
+              webrtc::H264::Profile profile = webrtc::H264::kProfileBaseline,
+              int maxQp = -1,
+              int quality = -1);
+  void StripHeaders(std::istream& file,
                   std::ostream& out,
                   int num_frames = INT_MAX,
                   int start_frame = 0);
@@ -47,51 +50,90 @@ void RemoveMissingFrames(std::istream& uncompressed,
                          int num_frames = INT_MAX);
 
 
-  const int WIDTH = 1280;
-const int HEIGHT = 720;
-
-int frame_size = WIDTH * HEIGHT * 3 / 2;
 
 MainPage::MainPage() {
   InitializeComponent();
+}
 
-  const auto uncompressed = "uncompressed_complex";
-  const auto compressed = "compressed_complex-high-maxQP45";
+int ToInt(TextBox ^ box, const wchar_t* name, TextBlock ^ log) {
+  try {
+    auto wstr = std::wstring(box->Text->Data());
+    return std::stoi(wstr);
+  } catch (std::exception e) {
+    std::wstring msg(L"Invalid ");
+    msg += name;
+    using convert_type = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_type> converter;
+    std::wstring w = converter.from_bytes(e.what());
+    msg += L":" + w;
+    log->Text = ref new Platform::String(msg.c_str());
+    return -1;
+  }
+}
+
+void MainPage::Button_Click(Platform::Object ^ sender,
+                       Windows::UI::Xaml::RoutedEventArgs ^ e) {
+  auto input_val = this->input->Text;
+  auto output_val = this->output->Text;
+
+
 
   auto current = Windows::Storage::ApplicationData::Current;
   auto ppath = current->LocalFolder->Path;
-  std::wstring wpath(ppath->Data());
   using convert_type = std::codecvt_utf8<wchar_t>;
   std::wstring_convert<convert_type, wchar_t> converter;
-  std::string folderNameA = converter.to_bytes(wpath);
+  auto input_abs = ppath + L"\\" + input_val;
+  auto output_abs = ppath + L"\\" + output_val;
   {
-    std::ifstream uncompressed_file(
-        (folderNameA + "\\" + uncompressed + ".dat").c_str(),
-        std::ios_base::binary);
-    std::ofstream compressed_file(
-        (folderNameA + "\\" + compressed + ".dat").c_str(),
+    std::ifstream uncompressed_file(converter.to_bytes(input_abs->Data()),
         std::ios_base::binary);
 
-    DoEncode(uncompressed_file, compressed_file, WIDTH, HEIGHT, 30, 1000);
+    if (!uncompressed_file.good()) {
+      log->Text = L"Invalid input: " + input_abs;
+      return;
+    }
+
+    std::ofstream compressed_file(converter.to_bytes(output_abs->Data()),
+        std::ios_base::binary);
+
+    if (!compressed_file.good()) {
+      log->Text = L"Invalid output: " + output_abs;
+      return;
+    }
+
+    int w = ToInt(width, L"width", log);
+    if (w <= 0) {
+      return;
+    }
+
+    int h = ToInt(height, L"height", log);
+    if (h <= 0) {
+      return;
+    }
+
+    int br = ToInt(bitrate, L"bitrate", log);
+    if (br <= 0) {
+      return;
+    }
+
+    int fr = ToInt(fps, L"fps", log);
+    if (fr <= 0) {
+      return;
+    }
+
+    auto p = (webrtc::H264::Profile)profile->SelectedIndex;
+
+    int qp = ToInt(max_qp, L"MaxQP", log);
+    if (qp <= 0) {
+      return;
+    }
+    int q = ToInt(quality, L"quality", log);
+    if (q <= 0) {
+      return;
+    }
+
+    DoEncode(uncompressed_file, compressed_file, w, h, fr, br, p, qp, q);
+    log->Text = L"Encoding done";
   }
-  //{
-  //  std::ifstream compressed_file(
-  //      (folderNameA + "\\" + compressed + ".dat").c_str(),
-  //      std::ios_base::binary);
-  //  std::ofstream no_headers(
-  //      (folderNameA + "\\" + compressed + ".h264").c_str(),
-  //      std::ios_base::binary);
-
-  //  StripHeaders(compressed_file, no_headers, INT_MAX);
-  //}
-
-  //std::ifstream uncompressed_file(
-  //    (folderNameA + "\\" + uncompressed + ".dat").c_str(),
-  //    std::ios_base::binary);
-  //std::ifstream compressed_file(
-  //    (folderNameA + "\\" + compressed + ".dat").c_str(),
-  //    std::ios_base::binary);
-  //ReadFile(uncompressed_file, frame_size, INT_MAX);
-  //ReadFile(compressed_file, frame_size, INT_MAX);
   OutputDebugStringA("--- DONE ---\n");
 }

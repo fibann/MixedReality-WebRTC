@@ -22,6 +22,7 @@
 #include "../Utils/Utils.h"
 #include <fstream>
 #include <functional>
+#include <atomic>
 
 #pragma comment(lib, "mfreadwrite")
 #pragma comment(lib, "mfplat")
@@ -43,6 +44,7 @@ enum Profile {
 };
 
 }  // namespace H264
+
 
 	class VideoFrame {
  public:
@@ -229,5 +231,12 @@ class WinUWPH264EncoderImpl : public IH264EncodingCallback {
 };  // end of WinUWPH264EncoderImpl class
 
 }  // namespace webrtc
+
+extern std::atomic<webrtc::H264::Profile>
+    webrtc__WinUWPH264EncoderImpl__profile;
+
+extern int webrtc__WinUWPH264EncoderImpl__maxQp;
+extern int webrtc__WinUWPH264EncoderImpl__quality;
+
 #endif  // THIRD_PARTY_H264_WINUWP_H264ENCODER_H264ENCODER_H_
 

@@ -177,7 +177,15 @@ int64_t TimeMillis() {
 // User code should extern-declare and set this. There seems to be no easy way
 // to pass arbitrary parameters to the encoder so this is the best (easy)
 // option.
-bool webrtc__WinUWPH264EncoderImpl__add_padding = false;
+// Determines which H.264 profile to use for encoding.
+// Note: by default we should use what's passed by WebRTC on codec
+// initialization (which seems to be always ConstrainedBaseline), but we use
+// Baseline to avoid changing behavior compared to earlier versions.
+std::atomic<webrtc::H264::Profile> webrtc__WinUWPH264EncoderImpl__profile =
+    webrtc::H264::kProfileBaseline;
+
+int webrtc__WinUWPH264EncoderImpl__maxQp = -1;
+int webrtc__WinUWPH264EncoderImpl__quality = -1;
 
 namespace webrtc {
 
@@ -297,8 +305,9 @@ int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
   // the desired frame rate too.
   frame_rate_ = codec_settings->maxFramerate;
 
-  max_qp_ = 45;
-  //std::min(51, kMaxH264Qp);
+  max_qp_ = 51;
+  //std::min(codec_settings->qpMax, kMaxH264Qp);
+
 
   //frame_dropping_on_ = codec_settings->H264().frameDroppingOn;
   //key_frame_interval_ = codec_settings->H264().keyFrameInterval;
@@ -317,7 +326,7 @@ int WinUWPH264EncoderImpl::InitEncode(const VideoCodec* codec_settings,
   }
 
   // Initialize the profile for the track encoded by this object.
-  profile_ = H264::kProfileHigh;
+  profile_ = webrtc__WinUWPH264EncoderImpl__profile.load();
 
   // Configure the encoder.
   HRESULT hr = S_OK;
@@ -333,17 +342,7 @@ int WinUWPH264EncoderImpl::InitWriter() {
   bool is_hololens = IsHololens();
 
   AutoLock lock(&crit_);
-
-  // The hardware encoder on Hololens 1 produces severe artifacts at low
-  // bitrates when processing frames whose height is not multiple of 16. As a
-  // workaround we pad or crop those resolutions before passing them to the
-  // encoder.
   encoded_height_ = height_;
-  if (is_hololens) {
-    encoded_height_ = webrtc__WinUWPH264EncoderImpl__add_padding
-                          ? (height_ + 15) & ~15
-                          : height_ & ~15;
-  }
 
   // output media type (h264)
   ComPtr<IMFMediaType> mediaTypeOut;
@@ -429,12 +428,22 @@ int WinUWPH264EncoderImpl::InitWriter() {
   ON_SUCCEEDED(
       encodingAttributes->SetUINT32(CODECAPI_AVEncH264CABACEnable, VARIANT_TRUE));
 
+  if (webrtc__WinUWPH264EncoderImpl__maxQp >= 26) {
+    max_qp_ = webrtc__WinUWPH264EncoderImpl__maxQp;
+  }
+
   // kMaxH264Qp is the default.
   if (max_qp_ < kMaxH264Qp) {
     //RTC_LOG(LS_INFO) << "Set max QP to " << max_qp_;
     ON_SUCCEEDED(
         encodingAttributes->SetUINT32(CODECAPI_AVEncVideoMaxQP, max_qp_));
   }
+
+  if (webrtc__WinUWPH264EncoderImpl__quality >= 0) {
+    encodingAttributes->SetUINT32(CODECAPI_AVEncCommonQuality,
+                                  webrtc__WinUWPH264EncoderImpl__quality);
+  }
+
   ON_SUCCEEDED(sinkWriter_->SetInputMediaType(streamIndex_, mediaTypeIn.Get(),
                                               encodingAttributes.Get()));
 
@@ -442,7 +451,6 @@ int WinUWPH264EncoderImpl::InitWriter() {
   ON_SUCCEEDED(mediaSink_->RegisterEncodingCallback(this));
 
   ON_SUCCEEDED(sinkWriter_->BeginWriting());
-
   if (SUCCEEDED(hr)) {
     inited_ = true;
     last_rate_change_time_rtc_ms = rtc::TimeMillis();
