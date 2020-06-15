@@ -30,7 +30,7 @@ using namespace Windows::UI::Xaml::Navigation;
 // The Blank Page item template is documented at
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
-void ReadFile(std::ifstream& file, int frame_size, int num_frames = 100);
+void ReadFile(std::ifstream& file, int frame_size, int num_frames = INT_MAX);
 void DoEncode(std::ifstream& uncompressed_file,
               std::ofstream& compressed_file,
               int width,
@@ -53,6 +53,7 @@ void RemoveMissingFrames(std::istream& uncompressed,
 
 MainPage::MainPage() {
   InitializeComponent();
+  //Button_Click(this, nullptr);
 }
 
 int ToInt(TextBox ^ box, const wchar_t* name, TextBlock ^ log) {
@@ -73,10 +74,39 @@ int ToInt(TextBox ^ box, const wchar_t* name, TextBlock ^ log) {
 
 void MainPage::Button_Click(Platform::Object ^ sender,
                        Windows::UI::Xaml::RoutedEventArgs ^ e) {
+  int w = ToInt(width, L"width", log);
+  if (w <= 0) {
+    return;
+  }
+
+  int h = ToInt(height, L"height", log);
+  if (h <= 0) {
+    return;
+  }
+
+  int br = ToInt(bitrate, L"bitrate", log);
+  if (br <= 0) {
+    return;
+  }
+
+  int fr = ToInt(fps, L"fps", log);
+  if (fr <= 0) {
+    return;
+  }
+
+  auto p = (webrtc::H264::Profile)profile->SelectedIndex;
+
+  int qp = ToInt(max_qp, L"MaxQP", log);
+  if (qp <= 0) {
+    return;
+  }
+  int q = ToInt(quality, L"quality", log);
+  if (q <= 0) {
+    return;
+  }
+
   auto input_val = this->input->Text;
   auto output_val = this->output->Text;
-
-
 
   auto current = Windows::Storage::ApplicationData::Current;
   auto ppath = current->LocalFolder->Path;
@@ -89,7 +119,7 @@ void MainPage::Button_Click(Platform::Object ^ sender,
         std::ios_base::binary);
 
     if (!uncompressed_file.good()) {
-      log->Text = L"Invalid input: " + input_abs;
+      log->Text = L"Invalid input:\n" + input_abs;
       return;
     }
 
@@ -97,43 +127,20 @@ void MainPage::Button_Click(Platform::Object ^ sender,
         std::ios_base::binary);
 
     if (!compressed_file.good()) {
-      log->Text = L"Invalid output: " + output_abs;
+      log->Text = L"Invalid output:\n" + output_abs;
       return;
     }
-
-    int w = ToInt(width, L"width", log);
-    if (w <= 0) {
-      return;
-    }
-
-    int h = ToInt(height, L"height", log);
-    if (h <= 0) {
-      return;
-    }
-
-    int br = ToInt(bitrate, L"bitrate", log);
-    if (br <= 0) {
-      return;
-    }
-
-    int fr = ToInt(fps, L"fps", log);
-    if (fr <= 0) {
-      return;
-    }
-
-    auto p = (webrtc::H264::Profile)profile->SelectedIndex;
-
-    int qp = ToInt(max_qp, L"MaxQP", log);
-    if (qp <= 0) {
-      return;
-    }
-    int q = ToInt(quality, L"quality", log);
-    if (q <= 0) {
-      return;
-    }
-
     DoEncode(uncompressed_file, compressed_file, w, h, fr, br, p, qp, q);
     log->Text = L"Encoding done";
   }
-  OutputDebugStringA("--- DONE ---\n");
+  //OutputDebugStringA("--- DONE ---\n");
+
+
+  //std::ifstream uncompressed_file(converter.to_bytes(input_abs->Data()),
+  //                                std::ios_base::binary);
+  //std::ifstream compressed_file(converter.to_bytes(output_abs->Data()),
+  //                                std::ios_base::binary);
+  //int frame_size = w * h * 3 / 2;
+  //ReadFile(uncompressed_file, frame_size);
+  //ReadFile(compressed_file, frame_size);
 }

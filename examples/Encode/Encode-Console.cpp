@@ -115,18 +115,26 @@ int main(int argc, char* argv[]) {
   //}
 
    //auto unc_raw = std::string(dir) + input_file_name + ".raw";
-  auto unc_raw = std::string(dir) + input_file_name + "_trim.dat";
-  std::ifstream stripped_file(input_file, std::ios_base::binary);
-  std::ofstream raw_file(unc_raw, std::ios_base::binary);
-  Trim(stripped_file, raw_file, 720 - 180, 180);
-
+  {
+    auto unc_raw = std::string(dir) + input_file_name + "_trim.dat";
+    std::ifstream stripped_file(input_file, std::ios_base::binary);
+    std::ofstream raw_file(unc_raw, std::ios_base::binary);
+    Trim(stripped_file, raw_file, 700);
+   }
+  {
+     auto unc_trim= std::string(dir) + input_file_name + "_trim.dat";
+     auto unc_raw = std::string(dir) + input_file_name + "_trim.raw";
+    std::ifstream stripped_file(unc_trim, std::ios_base::binary);
+    std::ofstream raw_file(unc_raw, std::ios_base::binary);
+    StripHeaders(stripped_file, raw_file);
+  }
    //auto compr_raw = std::string(dir) + output_file_name + ".h264";
-  auto compr_raw = std::string(dir) + output_file_name + "_trim.dat";
-  std::ifstream cfile(output_file, std::ios_base::binary);
-  std::ofstream crawfile(compr_raw, std::ios_base::binary);
-  Trim(cfile, crawfile, 720 - 180, 180);
+  //auto compr_raw = std::string(dir) + output_file_name + "_trim.dat";
+  //std::ifstream cfile(output_file, std::ios_base::binary);
+  //std::ofstream crawfile(compr_raw, std::ios_base::binary);
+  //Trim(cfile, crawfile, 720, 180);
 
-  int frame_size = width * heigth * 3 / 2;
+  //int frame_size = width * heigth * 3 / 2;
 
   //ReadFile(uncompressed_file, frame_size, INT_MAX);
   //ReadFile(compressed_file, frame_size, INT_MAX);
