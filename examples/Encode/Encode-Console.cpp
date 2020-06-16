@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-void ReadFile(std::ifstream& file, int frame_size, int num_frames = 100);
+void ReadFile(std::ifstream& file, int num_frames = INT_MAX);
 void DoEncode(std::ifstream& uncompressed_file,
               std::ofstream& compressed_file,
               int width,
@@ -108,34 +108,37 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+
   //{
   //  std::ofstream stripped_file(unc_stripped, std::ios_base::binary);
   //  RemoveMissingFrames(uncompressed_file, compressed_file, stripped_file,
   //                      INT_MAX);
   //}
-
-   //auto unc_raw = std::string(dir) + input_file_name + ".raw";
-  //{
-  //  auto unc_raw = std::string(dir) + input_file_name + "_trim.dat";
-  //  std::ifstream stripped_file(input_file, std::ios_base::binary);
-  //  std::ofstream raw_file(unc_raw, std::ios_base::binary);
-  //  Trim(stripped_file, raw_file, 700);
+  //  {
+  //    std::ifstream out(trim260, std::ios_base::binary);
+  //    auto raw = std::string(dir) + output_file_name + "_trim260.h264";
+  //    std::ofstream raws(raw, std::ios_base::binary);
+  //    StripHeaders(out, raws);
+  //  }
   // }
-  {
-     auto unc_trim= std::string(dir) + input_file_name + "_trim.dat";
-     auto unc_raw = std::string(dir) + input_file_name + "_trim.raw";
-    std::ifstream stripped_file(unc_trim, std::ios_base::binary);
-    std::ofstream raw_file(unc_raw, std::ios_base::binary);
-    StripHeaders(stripped_file, raw_file);
-  }
-   auto compr_raw = std::string(dir) + output_file_name + ".h264";
-  //auto compr_raw = std::string(dir) + output_file_name + "_trim.dat";
-  std::ifstream cfile(output_file, std::ios_base::binary);
-  std::ofstream crawfile(compr_raw, std::ios_base::binary);
-  StripHeaders(cfile, crawfile);
+  //{
+  //   auto unc_trim= std::string(dir) + input_file_name + "_trim.dat";
+  //   auto unc_raw = std::string(dir) + input_file_name + "_trim.raw";
+  //  std::ifstream stripped_file(unc_trim, std::ios_base::binary);
+  //  std::ofstream raw_file(unc_raw, std::ios_base::binary);
+  //  StripHeaders(stripped_file, raw_file);
+  //}
+  //{
+  //  auto compr_raw = std::string(dir) + output_file_name + ".h264";
+  //  // auto compr_raw = std::string(dir) + output_file_name + "_trim.dat";
+  //  std::ifstream cfile(output_file, std::ios_base::binary);
+  //  std::ofstream crawfile(compr_raw, std::ios_base::binary);
+  //  StripHeaders(cfile, crawfile);
+
+  // }
 
   //int frame_size = width * heigth * 3 / 2;
 
   //ReadFile(uncompressed_file, frame_size, INT_MAX);
-  //ReadFile(compressed_file, frame_size, INT_MAX);
+  //ReadFile(uncompressed_file, INT_MAX);
 }

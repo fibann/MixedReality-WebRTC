@@ -16,9 +16,13 @@
 #include <algorithm>
 #include <iostream>
 
+void Log(const char* msg) {
+  std::cout << msg << std::endl;
+  //OutputDebugStringA(msg);
+}
 
-void ReadFile(std::ifstream& file, int frame_size, int num_frames) {
-  auto destBuffer = new char[frame_size];
+void ReadFile(std::ifstream& file, int frame_size) {
+  std::vector<char> destBuffer;
 
   int i = 0;
   LONGLONG last_frame_timestamp = 0;
@@ -28,7 +32,7 @@ void ReadFile(std::ifstream& file, int frame_size, int num_frames) {
   int bits_at_last_second = 0;
   int bits = 0;
   char log[1024];
-  while (i < num_frames) {
+  while (true) {
     int64_t timestampHns, durationHns;
     int32_t totalSize, delivery_ts{};
 
@@ -40,19 +44,19 @@ void ReadFile(std::ifstream& file, int frame_size, int num_frames) {
     //file.read((char*)&delivery_ts, sizeof(delivery_ts));
     file.read((char*)&totalSize, sizeof(totalSize));
     assert(totalSize <= frame_size);
-    file.read((char*)destBuffer, totalSize);
+    destBuffer.resize(totalSize);
+    file.read(destBuffer.data(), totalSize);
 
     if (last_second < timestampHns / 10'000'000) {
       last_second = timestampHns / 10'000'000;
       auto bitrate = (bits - bits_at_last_second) / 1000.0f;
-      //if (bitrate > 1500) {
-      //  OutputDebugStringA("WARNING - ");
-      //}
-      sprintf(log, "%d fps %f kbps\n", i - frames_at_last_second,
+
+      sprintf(log, "%d fps %f kbps", i - frames_at_last_second,
               bitrate);
       frames_at_last_second = i;
       bits_at_last_second = bits;
-      OutputDebugStringA(log);
+      Log(log);
+
     }
 
     auto actualDurationHns = timestampHns - last_frame_timestamp;
@@ -61,17 +65,17 @@ void ReadFile(std::ifstream& file, int frame_size, int num_frames) {
     last_frame_timestamp = timestampHns;
     //sprintf(log, "%d TS %lld ATS %d D %lld AD %lld SBF %d S %d\n", i, timestampHns / 10'000, delivery_ts, durationHns / 10'000,
     //        actualDurationHns / 10'000, actualSpaceBetweenFrames, totalSize);
-    sprintf(log, "%d Timestamp %lld Duration %lld Size %d\n", i,
+    sprintf(log, "%d Timestamp %lld Duration %lld Size %d", i,
             timestampHns / 10'000, durationHns / 10'000, totalSize);
     bits += totalSize * 8;
-    OutputDebugStringA(log);
+    Log(log);
     ++i;
   }
 
-  sprintf(log, "Total %f fps %f kbps\n",
+  sprintf(log, "Total %f fps %f kbps",
           ((float)i) / (last_frame_timestamp / 10'000'000),
           bits / 1000.0f / (last_frame_timestamp / 10'000'000));
-  OutputDebugStringA(log);
+  Log(log);
 }
 
 void StripHeaders(std::istream& file, std::ostream& out, int num_frames, int start_frame) {
