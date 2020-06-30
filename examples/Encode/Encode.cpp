@@ -170,8 +170,7 @@ void Read(std::istream& file, Frame& frame) {
 }
 
 void RemoveMissingFrames(std::istream& uncompressed,
-                        std::istream& compressed, std::ostream& out,
-                        int num_frames = INT_MAX) {
+                        std::istream& compressed, std::ostream& out) {
   std::vector<char> buffer;
 
   int i = 0;
@@ -182,7 +181,7 @@ void RemoveMissingFrames(std::istream& uncompressed,
   int bits_at_last_second = 0;
   int bits = 0;
   char log[1024];
-  while (i < num_frames) {
+  while (true) {
     Frame frame_u;
     Frame frame_c;
     Read(compressed, frame_c);
@@ -196,6 +195,9 @@ void RemoveMissingFrames(std::istream& uncompressed,
     std::cout << i << ": " << frame_u.timestampHns << " - " << frame_c.timestampHns << std::endl;
     while (frame_u.timestampHns / 10000 < frame_c.timestampHns / 10000) {
       Read(uncompressed, frame_u);
+      if (uncompressed.eof()) {
+        break;
+      }
       std::cout << frame_u.timestampHns << std::endl;
     }
 
