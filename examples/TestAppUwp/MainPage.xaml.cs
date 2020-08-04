@@ -260,6 +260,14 @@ namespace TestAppUwp
         public MainPage()
         {
             this.InitializeComponent();
+            max_qp.TextChanged += max_qp_TextChanged;
+            quality.TextChanged += quality_TextChanged;
+            record.Checked += record_Checked;
+            record.Unchecked += record_Checked;
+            h264Mode.SelectionChanged += h264Mode_SelectionChanged;
+            h264Mode_SelectionChanged(this, null);
+
+
             muteLocalVideoStroke.Visibility = Visibility.Collapsed;
             muteLocalAudioStroke.Visibility = Visibility.Collapsed;
 
@@ -339,16 +347,16 @@ namespace TestAppUwp
             // Uncomment these lines if you want to connect a HoloLens (or any non-x64 device) to a
             // x64 PC.
             var arch = System.Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
-            //if (arch == "AMD64")
-            //{
-            //    localPeerUidTextBox.Text = "Pc";
-            //    remotePeerUidTextBox.Text = "Device";
-            //}
-            //else
-            //{
-            //    localPeerUidTextBox.Text = "Device";
-            //    remotePeerUidTextBox.Text = "Pc";
-            //}
+            if (arch == "AMD64")
+            {
+                localPeerUidTextBox.Text = "Pc";
+                remotePeerUidTextBox.Text = "Device";
+            }
+            else
+            {
+                localPeerUidTextBox.Text = "Device";
+                remotePeerUidTextBox.Text = "Pc";
+            }
 
             // Get server address and peer ID from local settings if available.
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
@@ -1707,11 +1715,12 @@ namespace TestAppUwp
             PeerConnection.SetH264EncodeProfile((PeerConnection.H264Profile)h264Profile.SelectedIndex);
         }
 
-        private bool ParseParams(out int maxQp, out int qual)
+        private bool ParseParams(out PeerConnection.H264Mode mode, out int maxQp, out int qual)
         {
             _invalidParams.Text = "";
             try
             {
+                mode = (PeerConnection.H264Mode)h264Mode.SelectedIndex;
                 maxQp = int.Parse(max_qp.Text);
                 qual = int.Parse(quality.Text);
                 uint.Parse(_bitrate.Text);
@@ -1722,6 +1731,7 @@ namespace TestAppUwp
             catch (Exception _)
             {
                 _invalidParams.Text = "Invalid params!";
+                mode = PeerConnection.H264Mode.Cbr;
                 maxQp = qual = -1;
                 return false;
             }
@@ -1729,25 +1739,31 @@ namespace TestAppUwp
 
         private void max_qp_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (ParseParams(out int maxQp, out int qual))
-                PeerConnection.SetExtraParams(maxQp, qual, record.IsChecked.Value);
+            if (ParseParams(out PeerConnection.H264Mode mode, out int maxQp, out int qual))
+                PeerConnection.SetExtraParams(mode, maxQp, qual, record.IsChecked.Value);
         }
 
         private void quality_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (ParseParams(out int maxQp, out int qual))
-                PeerConnection.SetExtraParams(maxQp, qual, record.IsChecked.Value);
+            if (ParseParams(out PeerConnection.H264Mode mode, out int maxQp, out int qual))
+                PeerConnection.SetExtraParams(mode, maxQp, qual, record.IsChecked.Value);
         }
 
         private void record_Checked(object sender, RoutedEventArgs e)
         {
-            if (ParseParams(out int maxQp, out int qual))
-                PeerConnection.SetExtraParams(maxQp, qual, record.IsChecked.Value);
+            if (ParseParams(out PeerConnection.H264Mode mode, out int maxQp, out int qual))
+                PeerConnection.SetExtraParams(mode, maxQp, qual, record.IsChecked.Value);
         }
 
         private void _bitrate_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ParseParams(out int _, out int _);
+            ParseParams(out PeerConnection.H264Mode _, out int _, out int _);
+        }
+
+        private void h264Mode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ParseParams(out PeerConnection.H264Mode mode, out int maxQp, out int qual))
+                PeerConnection.SetExtraParams(mode, maxQp, qual, record.IsChecked.Value);
         }
     }
 }

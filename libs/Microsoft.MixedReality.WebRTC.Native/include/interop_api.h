@@ -706,6 +706,8 @@ enum class mrsH264Profile : int32_t {
 /// created by the application, after the call to this function.
 MRS_API void MRS_CALL mrsSetH264EncodeProfile(mrsH264Profile profile);
 
+enum class mrsH264RateControlMode { kCBR = 0, kVBR = 1, kQuality = 2 };
+
 //
 // Generic utilities
 //

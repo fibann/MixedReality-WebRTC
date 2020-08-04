@@ -2142,13 +2142,20 @@ namespace Microsoft.MixedReality.WebRTC
             RemoteAudioFrameReady?.Invoke(frame);
         }
 
+        public enum H264Mode
+        {
+            Cbr = 0,
+            Vbr = 1,
+            Quality = 2
+        }
+
         [DllImport(Interop.Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsSetExtraParams")]
-        public static extern void SetExtraParams(int maxQp, int quality, mrsBool record);
+        public static extern void SetExtraParams(int mode, int maxQp, int quality, mrsBool record);
 
-        public static void SetExtraParams(int maxQp, int quality, bool record)
+        public static void SetExtraParams(H264Mode mode, int maxQp, int quality, bool record)
         {
-            SetExtraParams(maxQp, quality, (mrsBool)record);
+            SetExtraParams((int)mode, maxQp, quality, (mrsBool)record);
         }
 
     }

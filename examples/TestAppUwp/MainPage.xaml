@@ -87,16 +87,16 @@
                     The signaling server is used to discover a peer to connect to. This app uses <Hyperlink NavigateUri="https://github.com/bengreenier/node-dss">node-dss</Hyperlink>.
                     </TextBlock>
                     <TextBlock Text="Server address" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,12,0" Grid.Row="2"/>
-                    <TextBox Name="dssServer" HorizontalAlignment="Left" PlaceholderText="http://server:port/" Text="http://10.164.25.115:3000/" VerticalAlignment="Center" Width="285" Grid.Row="2" Grid.Column="1" Margin="0,6,0,6"/>
+                    <TextBox Name="dssServer" HorizontalAlignment="Left" PlaceholderText="http://server:port/" Text="http://192.168.0.45:3000/" VerticalAlignment="Center" Width="285" Grid.Row="2" Grid.Column="1" Margin="0,6,0,6"/>
                     <TextBlock Text="Poll delay" VerticalAlignment="Center" Grid.Row="3" HorizontalAlignment="Right" Margin="0,0,12,0"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" Margin="0,6,0,6">
                         <TextBox x:Name="dssPollTimeMs" MinWidth="100" Text="500" TextAlignment="Right"/>
                         <TextBlock Text="ms" VerticalAlignment="Center" Margin="4,0,0,0" />
                     </StackPanel>
                     <TextBlock Text="Local peer UID" VerticalAlignment="Center" Grid.Row="4" HorizontalAlignment="Right" Margin="0,0,12,0" Height="20"  />
-                    <TextBox x:Name="localPeerUidTextBox" MinWidth="250" Grid.Row="4" Grid.Column="1" Margin="0,6,0,6" />
+                    <TextBox x:Name="localPeerUidTextBox" MinWidth="250" Grid.Row="4" Grid.Column="1" Margin="0,6,0,6"/>
                     <TextBlock Text="Remote peer UID" VerticalAlignment="Center" Margin="0,0,12,0" Grid.Row="5" HorizontalAlignment="Right"  />
-                    <TextBox x:Name="remotePeerUidTextBox" MinWidth="250" Grid.Row="5" Grid.Column="1" Margin="0,6,0,6" />
+                    <TextBox x:Name="remotePeerUidTextBox" MinWidth="250" Grid.Row="5" Grid.Column="1" Margin="0,6,0,6"/>
                     <!--<SymbolIcon Symbol="Setting" />-->
                     <Button x:Name="pollDssButton" Content="Start polling" HorizontalAlignment="Left" Margin="0,12,0,0" VerticalAlignment="Center" Width="125" Click="PollDssButtonClicked" Grid.Row="6" Grid.ColumnSpan="2"/>
                     <!--<ListView x:Name="NavLinksList" Margin="0,12,0,0" SelectionMode="None" Grid.Row="1" VerticalAlignment="Stretch"
@@ -175,9 +175,9 @@
                         <TextBlock Text="Video capture device" FontWeight="Bold" Margin="0,12,0,0" FontFamily="Segoe UI" />
                         <ListView x:Name="VideoCaptureDeviceList" ItemsSource="{x:Bind VideoCaptureDevices}" ItemTemplate="{StaticResource VideoCaptureDeviceTemplate}" MinHeight="120" MinWidth="120" />
 
-			<StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Margin="16,0,16,0">H.264 encoding profile: </TextBlock>
-                            <ComboBox x:Name="h264Profile" Margin="16,0,0,0" Width="200" SelectedIndex="1" SelectionChanged="h264Profile_SelectionChanged">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Margin="16,0,16,0">H.264 encoding profile:</TextBlock>
+                            <ComboBox x:Name="h264Profile" Margin="16,0,0,0" Width="200" SelectedIndex="4" SelectionChanged="h264Profile_SelectionChanged">
                                 <x:String>Constrained Baseline</x:String>
                                 <x:String>Baseline</x:String>
                                 <x:String>Main</x:String>
@@ -186,16 +186,24 @@
                             </ComboBox>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Margin="16,0,16,0">H.264 encoding profile:</TextBlock>
+                            <ComboBox x:Name="h264Mode" Margin="16,0,0,0" Width="150" SelectedIndex="1">
+                                <x:String>CBR</x:String>
+                                <x:String>VBR</x:String>
+                                <x:String>Quality</x:String>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
                             <TextBlock Margin="16, 0,0,0">Bitrate (kbps):</TextBlock>
-                            <TextBox x:Name="_bitrate" Text="1000" TextChanged="_bitrate_TextChanged"></TextBox>
+                            <TextBox x:Name="_bitrate" Text="1000"></TextBox>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0, 16, 0, 0">
                             <TextBlock Margin="16, 0,0,0">Max QP:</TextBlock>
-                            <TextBox x:Name="max_qp" Text="44" TextChanged="max_qp_TextChanged"></TextBox>
+                            <TextBox x:Name="max_qp" Text="51"></TextBox>
                             <TextBlock Margin="16, 0,0,0">Quality:</TextBlock>
-                            <TextBox x:Name="quality" Text="31" TextChanged="quality_TextChanged"></TextBox>
+                            <TextBox x:Name="quality" Text="33"></TextBox>
                             <TextBlock Margin="16, 0,0,0">Record:</TextBlock>
-                            <CheckBox x:Name="record" Checked="record_Checked" Unchecked="record_Checked"></CheckBox>
+                            <CheckBox x:Name="record"></CheckBox>
                         </StackPanel>
                         <TextBlock x:Name="_invalidParams"></TextBlock>
                     </StackPanel>
