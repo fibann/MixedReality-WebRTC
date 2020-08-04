@@ -12,7 +12,7 @@
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock FontSize="20px">Input file:</TextBlock>
-            <TextBox FontSize="20px" x:Name="input" Width="300" Text="uncompressed.dat"></TextBox>
+            <TextBox FontSize="20px" x:Name="input" Width="300" Text="uncompressed_complex_trim.dat"></TextBox>
             <TextBlock FontSize="20px">Output file:</TextBlock>
             <TextBox FontSize="20px" x:Name="output" Width="300" Text="compressed.dat"></TextBox>
         </StackPanel>
@@ -22,11 +22,17 @@
             <TextBlock FontSize="20px">Height:</TextBlock>
             <TextBox FontSize="20px" x:Name="height" Text="720"></TextBox>
             <TextBlock FontSize="20px">Bitrate:</TextBlock>
-            <TextBox FontSize="20px" x:Name="bitrate" Text="1000"></TextBox>
+            <TextBox FontSize="20px" x:Name="bitrate" Text="1500"></TextBox>
             <TextBlock FontSize="20px">Fps:</TextBlock>
             <TextBox FontSize="20px" x:Name="fps" Text="30"></TextBox>
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 20, 0, 0">
+            <TextBlock FontSize="20px">Mode:</TextBlock>
+            <ComboBox  FontSize="20px" x:Name="mode" Width="150" SelectedIndex="2">
+                <x:String>CBR</x:String>
+                <x:String>VBR</x:String>
+                <x:String>Quality</x:String>
+            </ComboBox>
             <TextBlock FontSize="20px">Profile:</TextBlock>
             <ComboBox  FontSize="20px" x:Name="profile" Width="200" SelectedIndex="4">
                 <x:String>Constrained Baseline</x:String>
@@ -36,9 +42,9 @@
                 <x:String>High</x:String>
             </ComboBox>
             <TextBlock FontSize="20px">Max QP:</TextBlock>
-            <TextBox FontSize="20px" x:Name="max_qp" Text="44"></TextBox>
+            <TextBox FontSize="20px" x:Name="max_qp" Text="51"></TextBox>
             <TextBlock FontSize="20px">Quality:</TextBlock>
-            <TextBox FontSize="20px" x:Name="quality" Text="31"></TextBox>
+            <TextBox FontSize="20px" x:Name="quality" Text="1"></TextBox>
         </StackPanel>
         <Button Margin="0, 20, 0, 0" FontSize="20px" x:Name="encode" Click="Button_Click" Content="Encode"></Button>
         <TextBlock Margin="0, 20, 0, 0" FontSize="20px" x:Name="log" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Click on Encode to start"></TextBlock>

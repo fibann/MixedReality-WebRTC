@@ -103,6 +103,7 @@
     <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv.h" />
     <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\psnr.h" />
     <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\ssim.h" />
+    <ClInclude Include="Encode.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\LockScreenLogo.scale-200.png">

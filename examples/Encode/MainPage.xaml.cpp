@@ -12,6 +12,7 @@
 #include <fstream>
 
 #include "H264Encoder/H264Encoder.h"
+#include "Encode.h"
 #include "pch.h"
 
 using namespace Encode;
@@ -30,30 +31,10 @@ using namespace Windows::UI::Xaml::Navigation;
 // The Blank Page item template is documented at
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
-void ReadFile(std::ifstream& file, int frame_size, int num_frames = INT_MAX);
-void DoEncode(std::ifstream& uncompressed_file,
-              std::ofstream& compressed_file,
-              int width,
-              int height,
-              int framerate,
-              int bitrate,
-              webrtc::H264::Profile profile = webrtc::H264::kProfileBaseline,
-              int maxQp = -1,
-              int quality = -1);
-  void StripHeaders(std::istream& file,
-                  std::ostream& out,
-                  int num_frames = INT_MAX,
-                  int start_frame = 0);
-void RemoveMissingFrames(std::istream& uncompressed,
-                         std::istream& compressed,
-                         std::ostream& out,
-                         int num_frames = INT_MAX);
-
-
 
 MainPage::MainPage() {
   InitializeComponent();
-  //Button_Click(this, nullptr);
+  Button_Click(this, nullptr);
 }
 
 int ToInt(TextBox ^ box, const wchar_t* name, TextBlock ^ log) {
@@ -94,6 +75,7 @@ void MainPage::Button_Click(Platform::Object ^ sender,
     return;
   }
 
+  auto m = (Mode)mode->SelectedIndex;
   auto p = (webrtc::H264::Profile)profile->SelectedIndex;
 
   int qp = ToInt(max_qp, L"MaxQP", log);
@@ -130,7 +112,7 @@ void MainPage::Button_Click(Platform::Object ^ sender,
       log->Text = L"Invalid output:\n" + output_abs;
       return;
     }
-    DoEncode(uncompressed_file, compressed_file, w, h, fr, br, p, qp, q);
+    DoEncode(uncompressed_file, compressed_file, w, h, fr, br, m, p, qp, q);
     log->Text = L"Encoding done";
   }
   //OutputDebugStringA("--- DONE ---\n");

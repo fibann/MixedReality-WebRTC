@@ -224,6 +224,7 @@
     <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\include\libyuv\video_common.h" />
     <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\psnr.h" />
     <ClInclude Include="..\..\external\webrtc-uwp-sdk\webrtc\xplatform\libyuv\util\ssim.h" />
+    <ClInclude Include="Encode.h" />
     <ClInclude Include="H264Encoder\H264Encoder.h" />
     <ClInclude Include="H264Encoder\H264MediaSink.h" />
     <ClInclude Include="H264Encoder\H264StreamSink.h" />

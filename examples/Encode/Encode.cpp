@@ -11,9 +11,9 @@
 #include <fstream>
 
 #include "H264Encoder/H264Encoder.h"
+#include "Encode.h"
 #include <atomic>
 #include <cstddef>
-#include <algorithm>
 #include <iostream>
 
 void Log(const char* msg) {
@@ -219,10 +219,11 @@ void DoEncode(std::ifstream& uncompressed_file,
               int width,
               int height,
               int framerate,
-    int bitrate,
-              webrtc::H264::Profile profile = webrtc::H264::kProfileBaseline,
-    int maxQp = -1,
-    int quality = -1) {
+              int bitrate,
+              Mode mode,
+              webrtc::H264::Profile profile,
+              int maxQp,
+              int quality) {
   webrtc::VideoCodec codec;
   codec.width = width;
   codec.height = height;
@@ -233,6 +234,7 @@ void DoEncode(std::ifstream& uncompressed_file,
   int frame_size = codec.width * codec.height * 3 / 2;
 
   webrtc__WinUWPH264EncoderImpl__profile = profile;
+  webrtc__WinUWPH264EncoderImpl__mode = mode;
   webrtc__WinUWPH264EncoderImpl__maxQp = maxQp;
   webrtc__WinUWPH264EncoderImpl__quality = quality;
 

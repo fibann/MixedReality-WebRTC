@@ -31,6 +31,7 @@
 namespace rtc {
 int64_t TimeMillis();
 }
+enum class Mode : int32_t { CBR = 0, VBR = 1, Quality = 2 };
 
 namespace webrtc {
 namespace H264 {
@@ -235,6 +236,7 @@ class WinUWPH264EncoderImpl : public IH264EncodingCallback {
 extern std::atomic<webrtc::H264::Profile>
     webrtc__WinUWPH264EncoderImpl__profile;
 
+extern Mode webrtc__WinUWPH264EncoderImpl__mode;
 extern int webrtc__WinUWPH264EncoderImpl__maxQp;
 extern int webrtc__WinUWPH264EncoderImpl__quality;
 
